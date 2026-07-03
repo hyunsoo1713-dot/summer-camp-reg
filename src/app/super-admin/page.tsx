@@ -232,8 +232,8 @@ export default function SuperAdminDashboard() {
         db.updateManager(targetId, { status: 'approved' });
         triggerToast(`[${targetName}] 지방 관리자 가입이 승인되었습니다.`, 'success');
       } else if (type === 'reject_manager') {
-        db.updateManager(targetId, { status: 'rejected' });
-        triggerToast(`[${targetName}] 지방 관리자 가입이 반려되었습니다.`, 'success');
+        db.deleteManager(targetId);
+        triggerToast(`[${targetName}] 지방 관리자 가입이 반려(삭제)되었습니다.`, 'success');
       }
       loadDistricts();
     } catch (err: any) {

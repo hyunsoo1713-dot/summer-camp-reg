@@ -248,8 +248,8 @@ export default function AdminDashboard() {
   };
 
   const handleRejectManager = (id: string) => {
-    if (confirm('이 담당자 신청을 반려하시겠습니까?')) {
-      db.updateManager(id, { status: 'rejected' });
+    if (confirm('이 담당자 신청을 반려(삭제)하시겠습니까?')) {
+      db.deleteManager(id);
       loadAllData(event!.id);
     }
   };

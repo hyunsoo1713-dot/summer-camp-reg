@@ -526,9 +526,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
   const handleRejectManager = async (id: string) => {
     if (!district) return;
-    const ok = await showConfirm('담당자 반려', '이 담당자 신청을 반려하시겠습니까?');
+    const ok = await showConfirm('담당자 반려', '이 담당자 신청을 반려(삭제)하시겠습니까?');
     if (ok) {
-      db.updateManager(id, { status: 'rejected' });
+      db.deleteManager(id);
       loadAllData(district.id, event?.id || '');
     }
   };
