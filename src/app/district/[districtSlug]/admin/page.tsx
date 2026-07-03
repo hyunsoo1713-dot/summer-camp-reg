@@ -189,13 +189,18 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     setDistrict(dist);
 
     // 2. 세션 검증
-    const sessStr = sessionStorage.getItem('evt_session');
+    const sessStr = localStorage.getItem('evt_session');
     if (!sessStr) {
       router.push(`/district/${districtSlug}/login`);
       return;
     }
-    const sess = JSON.parse(sessStr);
-    if (sess.role !== 'admin' || sess.districtSlug !== districtSlug) {
+    try {
+      const session = JSON.parse(sessStr);
+      if (!session.is_admin || session.district_id !== dist.id) {
+        router.push(`/district/${districtSlug}/login`);
+        return;
+      }
+    } catch (e) {
       router.push(`/district/${districtSlug}/login`);
       return;
     }
@@ -226,7 +231,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('evt_session');
+    localStorage.removeItem('evt_session');
     router.push(`/district/${districtSlug}/login`);
   };
 
@@ -263,7 +268,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     if (!district) return;
     
     // 현재 세션 가져오기
-    const sessStr = sessionStorage.getItem('evt_session');
+    const sessStr = localStorage.getItem('evt_session');
     if (!sessStr) {
       alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
       router.push(`/district/${districtSlug}/login`);
@@ -1456,7 +1461,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                      <th className="p-3">신청자명</th>
+                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">신청자명</th>
                       <th className="p-3">신청 교회</th>
                       <th className="p-3">연락처</th>
                       <th className="p-3">비고 / 신청 메모</th>
@@ -1466,8 +1471,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {pendingManagers.length > 0 ? (
                       pendingManagers.map(m => (
-                        <tr key={m.id} className="hover:bg-slate-50/50">
-                          <td className="p-3 font-semibold text-slate-900">{m.name}</td>
+                        <tr key={m.id} className="hover:bg-slate-50/50 group">
+                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{m.name}</td>
                           <td className="p-3 font-semibold text-indigo-600">
                             {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
                           </td>
@@ -1517,7 +1522,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                      <th className="p-3">이름</th>
+                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">이름</th>
                       <th className="p-3">연락처</th>
                       <th className="p-3 text-center">권한 및 가입 제어</th>
                     </tr>
@@ -1525,8 +1530,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {approvedManagers.length > 0 ? (
                       approvedManagers.map(m => (
-                        <tr key={m.id} className="hover:bg-slate-50/50">
-                          <td className="p-3 font-semibold text-slate-900">
+                        <tr key={m.id} className="hover:bg-slate-50/50 group">
+                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                             {(m.is_admin ?? (m.church_id === '')) ? '지방회 관리자' : m.name}
                           </td>
                           <td className="p-3">

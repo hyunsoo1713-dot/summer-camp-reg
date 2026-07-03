@@ -61,7 +61,7 @@ export default function SuperAdminDashboard() {
     }
 
     // 세션 확인
-    const superSess = sessionStorage.getItem('super_session');
+    const superSess = localStorage.getItem('super_session');
     if (superSess === 'active') {
       setIsAuthenticated(true);
       loadDistricts();
@@ -108,7 +108,7 @@ export default function SuperAdminDashboard() {
     const config = db.getPlatformConfig();
     const expectedPassword = config.super_admin_password || process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || 'super123';
     if (password === expectedPassword) { // 최고관리자 비밀번호 설정
-      sessionStorage.setItem('super_session', 'active');
+      localStorage.setItem('super_session', 'active');
       setIsAuthenticated(true);
       setLoginError('');
       loadDistricts();
@@ -153,7 +153,7 @@ export default function SuperAdminDashboard() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('super_session');
+    localStorage.removeItem('super_session');
     setIsAuthenticated(false);
     setPassword('');
   };

@@ -31,6 +31,23 @@ export default function LoginPage({ params }: PageProps) {
     }
     setDistrict(dist);
     setPageLoading(false);
+
+    // 자동 로그인 처리
+    const sessStr = localStorage.getItem('evt_session');
+    if (sessStr) {
+      try {
+        const session = JSON.parse(sessStr);
+        if (session.districtId === dist.id || session.districtSlug === districtSlug) {
+          if (session.is_admin || session.role === 'admin') {
+            router.push(`/district/${districtSlug}/admin`);
+          } else if (session.role === 'manager') {
+            router.push(`/district/${districtSlug}/manager`);
+          }
+        }
+      } catch (e) {
+        localStorage.removeItem('evt_session');
+      }
+    }
   }, [districtSlug, router]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -55,11 +72,12 @@ export default function LoginPage({ params }: PageProps) {
         if (result.success && result.role) {
           // 세션 저장 (Mock/Firebase 인증)
           // districtId와 districtSlug도 함께 세션에 적재하여 어드민에서 격리 활용
-          sessionStorage.setItem('evt_session', JSON.stringify({
+          localStorage.setItem('evt_session', JSON.stringify({
             loginId: loginId.trim(),
             role: result.role,
             churchId: result.churchId,
             name: result.name,
+            is_admin: result.role === 'admin',
             districtId: result.role === 'super' ? '' : district.id,
             districtSlug: result.role === 'super' ? '' : districtSlug
           }));

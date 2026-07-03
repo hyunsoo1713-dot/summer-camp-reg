@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
@@ -12,6 +12,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  // 자동 로그인 처리
+  useEffect(() => {
+    const sessStr = localStorage.getItem('evt_session');
+    if (sessStr) {
+      try {
+        const session = JSON.parse(sessStr);
+        if (session.role === 'admin') {
+          router.push('/admin');
+        } else if (session.role === 'manager') {
+          router.push('/manager');
+        }
+      } catch (e) {
+        localStorage.removeItem('evt_session');
+      }
+    }
+  }, [router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +47,7 @@ export default function LoginPage() {
         
         if (result.success && result.role) {
           // 세션 저장 (Mock 인증)
-          sessionStorage.setItem('evt_session', JSON.stringify({
+          localStorage.setItem('evt_session', JSON.stringify({
             loginId: loginId.trim(),
             role: result.role,
             churchId: result.churchId,

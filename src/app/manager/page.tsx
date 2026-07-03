@@ -72,7 +72,7 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     // 1. 인증 검증
-    const sessStr = sessionStorage.getItem('evt_session');
+    const sessStr = localStorage.getItem('evt_session');
     if (!sessStr) {
       router.push('/login');
       return;
@@ -122,7 +122,7 @@ export default function ManagerDashboard() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('evt_session');
+    localStorage.removeItem('evt_session');
     router.push('/login');
   };
 
@@ -731,10 +731,10 @@ export default function ManagerDashboard() {
 
             {/* Requests Table */}
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                    <th className="p-3">아동명 (요청자)</th>
+                    <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">아동명</th>
                     <th className="p-3">희망 대상자</th>
                     <th className="p-3">요청 사유</th>
                     <th className="p-3 text-center">반영 여부</th>
@@ -744,8 +744,8 @@ export default function ManagerDashboard() {
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {requests.length > 0 ? (
                     requests.map(req => (
-                      <tr key={req.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 font-semibold text-slate-900">{req.participant_name}</td>
+                      <tr key={req.id} className="hover:bg-slate-50/50 group">
+                        <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{req.participant_name}</td>
                         <td className="p-3 font-semibold text-slate-900">{req.requested_participant_name}</td>
                         <td className="p-3 text-slate-500">{req.reason || '-'}</td>
                         <td className="p-3 text-center">

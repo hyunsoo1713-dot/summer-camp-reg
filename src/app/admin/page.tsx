@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
   // 인증
   useEffect(() => {
-    const sessStr = sessionStorage.getItem('evt_session');
+    const sessStr = localStorage.getItem('evt_session');
     if (!sessStr) {
       router.push('/login');
       return;
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('evt_session');
+    localStorage.removeItem('evt_session');
     router.push('/login');
   };
 
