@@ -513,7 +513,10 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               </h3>
               <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                 {options.shirtSizes.map(size => {
-                  const count = participants.filter(p => p.shirt_size === size).length;
+                  // 참가자 + 담당자 사이즈 합산
+                  const participantCount = participants.filter(p => p.shirt_size === size).length;
+                  const managerCount = approvedManagers.filter(m => m.shirt_size === size).length;
+                  const count = participantCount + managerCount;
                   if (count === 0) return null;
                   return (
                     <div key={size} className="flex justify-between text-xs font-semibold text-slate-600 border-b border-slate-100 pb-1.5">

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
 import { Church, District } from '@/types';
-import { ArrowLeft, UserPlus, Info, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, UserPlus, Info, CheckCircle2, Shirt } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ districtSlug: string }>;
@@ -29,6 +29,8 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
+  const [shirtSize, setShirtSize] = useState<string>('');
+  const [shirtSizes, setShirtSizes] = useState<string[]>(['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']);
 
   // UI 상태
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -44,6 +46,15 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
     }
     setDistrict(dist);
     setChurches(db.getChurches(dist.id));
+    // 행사 옵션에서 티셔츠 사이즈 목록 로드
+    const activeEvent = db.getActiveEvent(dist.id);
+    if (activeEvent) {
+      const opts = db.getEventOptions(activeEvent.id);
+      if (opts.shirtSizes && opts.shirtSizes.length > 0) {
+        setShirtSizes(opts.shirtSizes);
+        setShirtSize(opts.shirtSizes[0]);
+      }
+    }
     setLoading(false);
   }, [districtSlug, router]);
 
@@ -102,10 +113,11 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
         name: managerName.trim(),
         phone: phone.trim(),
         login_id: loginId.trim(),
-        password_hash: password, // mock 환경에서는 단순 텍스트로 보관/검증
+        password_hash: password,
         memo: finalMemo,
         is_admin: false,
-        is_manager: true, // 가입 신청은 기본 교회 매니저 권한 신청임
+        is_manager: true,
+        shirt_size: shirtSize || undefined,
         requested_church_name: !useExistingChurch ? newChurchName.trim() : undefined
       }, false); // autoApprove = false (승인 대기)
 
@@ -297,6 +309,30 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
               onChange={e => setPasswordConfirm(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm input-focus-ring"
             />
+          </div>
+
+          {/* 티셔츠 사이즈 */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+              <Shirt className="w-4 h-4 text-slate-500" />
+              티셔츠 사이즈
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {shirtSizes.map(size => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setShirtSize(size)}
+                  className={`py-2.5 rounded-xl font-bold text-sm transition-all-custom border ${
+                    shirtSize === size
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 비고 */}

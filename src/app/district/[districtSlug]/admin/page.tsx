@@ -576,6 +576,16 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     }
   };
 
+  const handleUpdateManagerShirtSize = (managerId: string, size: string) => {
+    if (!district) return;
+    try {
+      db.updateManager(managerId, { shirt_size: size });
+      loadAllData(district.id, event?.id || '');
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   const handleDeleteManager = async (id: string, name: string) => {
     if (!district) return;
     const ok = await showConfirm('담당자 계정 삭제', `정말로 [${name}] 담당자 계정을 영구 삭제/탈퇴 처리하시겠습니까?`);
@@ -1479,6 +1489,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">신청자명</th>
                       <th className="p-3">신청 교회</th>
                       <th className="p-3">연락처</th>
+                      <th className="p-3">티셔츠</th>
                       <th className="p-3">비고 / 신청 메모</th>
                       <th className="p-3 text-center">동작</th>
                     </tr>
@@ -1492,6 +1503,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
                           </td>
                           <td className="p-3">{m.phone}</td>
+                          <td className="p-3">
+                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">
+                              {m.shirt_size || '-'}
+                            </span>
+                          </td>
                           <td className="p-3 text-slate-500">{m.memo || '-'}</td>
                           <td className="p-3 text-center">
                             <div className="flex justify-center gap-2">
@@ -1513,7 +1529,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="p-4 text-center text-slate-400">승인 대기 중인 신청이 없습니다.</td>
+                        <td colSpan={6} className="p-4 text-center text-slate-400">승인 대기 중인 신청이 없습니다.</td>
                       </tr>
                     )}
                   </tbody>
@@ -1539,6 +1555,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                       <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">이름</th>
                       <th className="p-3">연락처</th>
+                      <th className="p-3">티셔츠 사이즈</th>
                       <th className="p-3 text-center">권한 및 가입 제어</th>
                     </tr>
                   </thead>
@@ -1551,6 +1568,22 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           </td>
                           <td className="p-3">
                             {(m.is_admin ?? (m.church_id === '')) ? '-' : m.phone}
+                          </td>
+                          <td className="p-3">
+                            {(m.is_admin ?? (m.church_id === '')) ? (
+                              <span className="text-slate-400 text-[10px]">-</span>
+                            ) : (
+                              <select
+                                value={m.shirt_size || ''}
+                                onChange={(e) => handleUpdateManagerShirtSize(m.id, e.target.value)}
+                                className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold"
+                              >
+                                <option value="">-미선택-</option>
+                                {options.shirtSizes.map(s => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            )}
                           </td>
                           <td className="p-3 text-center">
                             <div className="flex justify-center items-center gap-2 flex-wrap">
@@ -1584,7 +1617,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={3} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
+                        <td colSpan={4} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
                       </tr>
                     )}
                   </tbody>

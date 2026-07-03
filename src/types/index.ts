@@ -48,6 +48,7 @@ export interface ChurchManager {
   is_admin?: boolean;
   is_manager?: boolean;
   requested_church_name?: string;
+  shirt_size?: string;
   created_at: string;
 }
 
