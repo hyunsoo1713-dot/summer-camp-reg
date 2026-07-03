@@ -285,7 +285,7 @@ export const mockDb = {
       storage.setItem('evt_group_members', JSON.stringify([]));
 
       // 추가 메타 정보 설정 (행사별 옵션 기본값)
-      storage.setItem('evt_opt_departments_evt-2026', JSON.stringify(['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등부', '고등부']));
+      storage.setItem('evt_opt_departments_evt-2026', JSON.stringify(['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등 1학년', '중등 2학년', '중등 3학년', '고등 1학년', '고등 2학년', '고등 3학년']));
       storage.setItem('evt_opt_birth_years_evt-2026', JSON.stringify(['2018년', '2019년', '2020년', '2021년', '2022년']));
       storage.setItem('evt_opt_shirt_sizes_evt-2026', JSON.stringify(['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']));
       storage.setItem('evt_opt_attendance_dates_evt-2026', JSON.stringify([
@@ -359,8 +359,8 @@ export const mockDb = {
         password_hash: adminPw,
         status: 'pending',
         is_admin: true,
-        is_manager: adminChurchName ? true : false,
-        requested_church_name: adminChurchName,
+        is_manager: false,
+        requested_church_name: '',
         created_at: new Date().toISOString()
       };
       managers.push(newManager);
@@ -381,14 +381,7 @@ export const mockDb = {
     // 지방회 승인 시, 해당 지방회의 기본 이벤트(evt_events)도 같이 자동 생성해 준다
     const event = this.createEventForDistrict(dist);
 
-    // 해당 지방회 어드민 계정도 승인 완료 처리
-    // 어드민의 소속 교회명이 있으면 교회를 자동 개설하여 연동해 줍니다.
-    let targetChurchId = '';
-    if (dist.admin_church_name) {
-      const newCh = this.createChurch(dist.admin_church_name, dist.id);
-      targetChurchId = newCh.id;
-    }
-
+    // 해당 지방회 어드민 계정도 승인 완료 처리 (교회 매칭 없음)
     const managers = this.getData<ChurchManager>('evt_managers');
     let updatedManagers = false;
     const updatedList = managers.map(m => {
@@ -397,9 +390,9 @@ export const mockDb = {
         return { 
           ...m, 
           status: 'approved' as const,
-          church_id: targetChurchId,
+          church_id: '',
           is_admin: true,
-          is_manager: targetChurchId ? true : false
+          is_manager: false
         };
       }
       return m;
@@ -965,11 +958,13 @@ export const mockDb = {
       const isManager = manager.is_manager ?? (manager.church_id !== '');
       
       if (isAdmin) {
+        const districts = this.getDistricts();
+        const dist = districts.find(d => d.id === manager.district_id);
         return { 
           success: true, 
           role: 'admin', 
-          churchId: isManager ? manager.church_id : '', 
-          name: `${manager.name} (본부 관리자)` 
+          churchId: '', 
+          name: dist ? `${dist.name} 관리자` : `${manager.name} (본부 관리자)` 
         };
       }
       

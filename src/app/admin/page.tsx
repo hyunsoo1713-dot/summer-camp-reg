@@ -15,6 +15,13 @@ import {
   ArrowRight, ShieldAlert, Edit, LogOut
 } from 'lucide-react';
 
+const ALL_DEPARTMENTS = [
+  '유아부', '유치부',
+  '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년',
+  '중등 1학년', '중등 2학년', '중등 3학년',
+  '고등 1학년', '고등 2학년', '고등 3학년'
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
@@ -98,6 +105,7 @@ export default function AdminDashboard() {
   const [feeTeacher, setFeeTeacher] = useState(0);
   const [feeVolunteer, setFeeVolunteer] = useState(0);
   const [birthYearsInput, setBirthYearsInput] = useState('');
+  const [activeDepartments, setActiveDepartments] = useState<string[]>(ALL_DEPARTMENTS);
 
   // 로딩 시 설정 채우기
   useEffect(() => {
@@ -121,6 +129,11 @@ export default function AdminDashboard() {
     }
     if (options.birthYears) {
       setBirthYearsInput(options.birthYears.join(', '));
+    }
+    if (options.departments && options.departments.length > 0) {
+      setActiveDepartments(options.departments);
+    } else {
+      setActiveDepartments(ALL_DEPARTMENTS);
     }
   }, [event, paymentSettings, options]);
 
@@ -171,7 +184,8 @@ export default function AdminDashboard() {
           '교사': feeTeacher,
           '봉사자': feeVolunteer
         },
-        birthYears: cleanBirthYears
+        birthYears: cleanBirthYears,
+        departments: activeDepartments
       });
 
       alert('행사 설정이 성공적으로 저장되었습니다.');
@@ -637,8 +651,206 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              <div className="flex flex-col gap-3 mt-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider">접수 부서 활성화 설정</h4>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDepartments(ALL_DEPARTMENTS)}
+                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"
+                    >
+                      전체 활성화
+                    </button>
+                    <span className="text-slate-300 text-[10px]">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDepartments([])}
+                      className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
+                    >
+                      전체 비활성화
+                    </button>
+                  </div>
+                </div>
+                
+                {/* 영유아/유치부 */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-500">영유아·유치부</span>
+                  <div className="flex flex-wrap gap-2">
+                    {['유아부', '유치부'].map(d => {
+                      const isActive = activeDepartments.includes(d);
+                      return (
+                        <label key={d} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all-custom ${
+                          isActive 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100/50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setActiveDepartments(prev => [...prev, d]);
+                              } else {
+                                setActiveDepartments(prev => prev.filter(item => item !== d));
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {d}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 초등부 */}
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-slate-500">초등부</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const depts = ['초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년'];
+                        const hasAll = depts.every(item => activeDepartments.includes(item));
+                        if (hasAll) {
+                          setActiveDepartments(prev => prev.filter(item => !depts.includes(item)));
+                        } else {
+                          setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
+                        }
+                      }}
+                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                    >
+                      초등부 ON/OFF
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {['초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년'].map(d => {
+                      const isActive = activeDepartments.includes(d);
+                      return (
+                        <label key={d} className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all-custom ${
+                          isActive 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100/50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setActiveDepartments(prev => [...prev, d]);
+                              } else {
+                                setActiveDepartments(prev => prev.filter(item => item !== d));
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {d.replace('초등 ', '')}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 중등부 */}
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-slate-500">중등부</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const depts = ['중등 1학년', '중등 2학년', '중등 3학년'];
+                        const hasAll = depts.every(item => activeDepartments.includes(item));
+                        if (hasAll) {
+                          setActiveDepartments(prev => prev.filter(item => !depts.includes(item)));
+                        } else {
+                          setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
+                        }
+                      }}
+                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                    >
+                      중등부 ON/OFF
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['중등 1학년', '중등 2학년', '중등 3학년'].map(d => {
+                      const isActive = activeDepartments.includes(d);
+                      return (
+                        <label key={d} className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all-custom ${
+                          isActive 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100/50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setActiveDepartments(prev => [...prev, d]);
+                              } else {
+                                setActiveDepartments(prev => prev.filter(item => item !== d));
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {d}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 고등부 */}
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-slate-500">고등부</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const depts = ['고등 1학년', '고등 2학년', '고등 3학년'];
+                        const hasAll = depts.every(item => activeDepartments.includes(item));
+                        if (hasAll) {
+                          setActiveDepartments(prev => prev.filter(item => !depts.includes(item)));
+                        } else {
+                          setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
+                        }
+                      }}
+                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                    >
+                      고등부 ON/OFF
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['고등 1학년', '고등 2학년', '고등 3학년'].map(d => {
+                      const isActive = activeDepartments.includes(d);
+                      return (
+                        <label key={d} className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all-custom ${
+                          isActive 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100/50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setActiveDepartments(prev => [...prev, d]);
+                              } else {
+                                setActiveDepartments(prev => prev.filter(item => item !== d));
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {d}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-1.5 mt-2">
-                <label className="text-xs font-bold text-slate-600">학부모 선택용 출생년도 옵션 관리 (쉼표로 구분)</label>
+                <label className="text-xs font-bold text-slate-600">유아, 유치부 출생년도 옵션 관리 (쉼표로 구분)</label>
                 <input
                   type="text"
                   value={birthYearsInput}
@@ -646,7 +858,7 @@ export default function AdminDashboard() {
                   placeholder="예: 2020년, 2021년, 2022년, 2023년, 2024년"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-bold"
                 />
-                <p className="text-[10px] text-slate-400">학부모 신청서와 수정 신청서의 유아부/유치부 출생년도 항목에 노출될 옵션 목록입니다. 쉼표(,)로 구분하여 연도 순서대로 입력해주세요.</p>
+                <p className="text-[10px] text-slate-400">신청서와 수정 신청서의 유아부/유치부 출생년도 항목에 노출될 옵션 목록입니다. 쉼표(,)로 구분하여 연도 순서대로 입력해주세요.</p>
               </div>
 
               <button

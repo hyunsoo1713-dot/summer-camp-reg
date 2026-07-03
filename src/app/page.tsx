@@ -22,7 +22,6 @@ export default function PlatformHomePage() {
   const [adminLoginId, setAdminLoginId] = useState<string>('');
   const [adminPassword, setAdminPassword] = useState<string>('');
   const [adminPasswordConfirm, setAdminPasswordConfirm] = useState<string>('');
-  const [adminChurchName, setAdminChurchName] = useState<string>('');
   
   // 상태 제어
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -72,10 +71,6 @@ export default function PlatformHomePage() {
       setErrorMsg('연락처를 입력해 주세요.');
       return;
     }
-    if (!adminChurchName.trim()) {
-      setErrorMsg('목사님 소속 교회명을 입력해 주세요.');
-      return;
-    }
     if (!adminLoginId.trim()) {
       setErrorMsg('본부 관리자로 로그인할 희망 아이디를 입력해 주세요.');
       return;
@@ -95,8 +90,8 @@ export default function PlatformHomePage() {
         slug: slug.trim().toLowerCase(),
         manager_name: managerName.trim(),
         phone: phone.trim(),
-        admin_church_name: adminChurchName.trim()
-      }, adminLoginId.trim(), adminPassword.trim(), adminChurchName.trim());
+        admin_church_name: ''
+      }, adminLoginId.trim(), adminPassword.trim(), '');
 
       setSubmittedDistrict(newDist);
       setIsSubmitted(true);
@@ -109,7 +104,6 @@ export default function PlatformHomePage() {
       setAdminLoginId('');
       setAdminPassword('');
       setAdminPasswordConfirm('');
-      setAdminChurchName('');
       window.scrollTo(0, 0);
     } catch (err: any) {
       setErrorMsg(err.message || '신청 처리 중 오류가 발생했습니다.');
@@ -374,21 +368,6 @@ export default function PlatformHomePage() {
               placeholder="예: 010-1111-2222"
               value={phone}
               onChange={e => setPhone(formatPhone(e.target.value))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs input-focus-ring font-bold"
-            />
-          </div>
-
-          {/* 소속 교회명 */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-black text-slate-700 flex items-center gap-1">
-              <Landmark className="w-3.5 h-3.5 text-slate-400" />
-              목사님 소속 교회명
-            </label>
-            <input
-              type="text"
-              placeholder="예: 예수인교회"
-              value={adminChurchName}
-              onChange={e => setAdminChurchName(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs input-focus-ring font-bold"
             />
           </div>

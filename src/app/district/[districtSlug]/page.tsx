@@ -21,6 +21,7 @@ export default function DistrictHomePage({ params }: PageProps) {
   const [statusText, setStatusText] = useState<string>('');
   const [canRegister, setCanRegister] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
 
   useEffect(() => {
     // 지방회 정보 찾기
@@ -114,10 +115,11 @@ export default function DistrictHomePage({ params }: PageProps) {
             {/* 가정통신문 안내문 최상단 노출 */}
             {event.notice_image_url &&
               <div className="bg-white rounded-3xl p-5 shadow-xl shadow-slate-100/50 border border-slate-100/80 overflow-hidden hover:scale-[1.01] transition-all duration-300">
-                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider block w-fit mb-3">
-                  🔔 행사 안내 가정통신문
-                </span>
-                <div className="rounded-2xl overflow-hidden border border-slate-100/60 max-h-[450px] flex items-center justify-center bg-slate-50/50">
+                <div 
+                  onClick={() => setShowImageModal(true)}
+                  className="rounded-2xl overflow-hidden border border-slate-100/60 max-h-[450px] flex items-center justify-center bg-slate-50/50 cursor-zoom-in"
+                  title="클릭하면 크게 확대하여 볼 수 있습니다"
+                >
                   <img
                     src={event.notice_image_url}
                     alt="가정통신문 안내장"
@@ -253,6 +255,28 @@ export default function DistrictHomePage({ params }: PageProps) {
       <footer className="w-full py-6 text-center text-xs text-slate-400 mt-auto">
         &copy; {new Date().getFullYear()} {district.name}. All rights reserved.
       </footer>
+
+      {/* 이미지 크게 보기 모달 */}
+      {showImageModal && event && event.notice_image_url && (
+        <div 
+          className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center bg-white rounded-2xl p-2 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={event.notice_image_url}
+              alt="가정통신문 크게보기"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-slate-800/80 hover:bg-slate-900 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs border border-slate-700/50 shadow-md transition-colors"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

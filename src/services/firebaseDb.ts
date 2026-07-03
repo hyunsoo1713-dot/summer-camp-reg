@@ -385,8 +385,8 @@ export const firebaseDb = {
         password_hash: adminPw,
         status: 'pending',
         is_admin: true,
-        is_manager: adminChurchName ? true : false,
-        requested_church_name: adminChurchName,
+        is_manager: false,
+        requested_church_name: '',
         created_at: new Date().toISOString()
       };
       memoryDb.managers.push(newManager);
@@ -406,22 +406,15 @@ export const firebaseDb = {
     // 지방회 승인 시, 해당 지방회의 기본 이벤트(evt_events)도 같이 자동 생성해 준다
     this.createEventForDistrict(dist);
 
-    // 해당 지방회 어드민 계정도 승인 완료 처리
-    // 어드민의 소속 교회명이 있으면 교회를 자동 개설하여 연동해 줍니다.
-    let targetChurchId = '';
-    if (dist.admin_church_name) {
-      const newCh = this.createChurch(dist.admin_church_name, dist.id);
-      targetChurchId = newCh.id;
-    }
-
+    // 해당 지방회 어드민 계정도 승인 완료 처리 (교회 매칭 없음)
     memoryDb.managers = memoryDb.managers.map(m => {
       if (m.district_id === id && m.church_id === '') {
         const updated = { 
           ...m, 
           status: 'approved' as const,
-          church_id: targetChurchId,
+          church_id: '',
           is_admin: true,
-          is_manager: targetChurchId ? true : false
+          is_manager: false
         };
         setDoc(doc(dbFirestore, 'church_managers', m.id), updated).catch(err => console.error(err));
         return updated;
@@ -466,7 +459,7 @@ export const firebaseDb = {
       `${currentYear - 2}년`
     ];
     const defaultOptions = {
-      departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등부', '고등부'],
+      departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등 1학년', '중등 2학년', '중등 3학년', '고등 1학년', '고등 2학년', '고등 3학년'],
       birthYears: defaultBirthYears,
       shirtSizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
       attendanceDates: [
@@ -502,7 +495,7 @@ export const firebaseDb = {
     memoryDb.events.push(newEvent);
 
     const defaultOptions = {
-      departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등부', '고등부'],
+      departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등 1학년', '중등 2학년', '중등 3학년', '고등 1학년', '고등 2학년', '고등 3학년'],
       birthYears: ['2018년', '2019년', '2020년', '2021년', '2022년'],
       shirtSizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
       attendanceDates: [
@@ -951,11 +944,12 @@ export const firebaseDb = {
       const isManager = manager.is_manager ?? (manager.church_id !== '');
       
       if (isAdmin) {
+        const dist = memoryDb.districts.find(d => d.id === manager.district_id);
         return { 
           success: true, 
           role: 'admin', 
-          churchId: isManager ? manager.church_id : '', 
-          name: `${manager.name} (본부 관리자)` 
+          churchId: '', 
+          name: dist ? `${dist.name} 관리자` : `${manager.name} (본부 관리자)` 
         };
       }
       
