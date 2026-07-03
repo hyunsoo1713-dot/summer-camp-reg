@@ -511,10 +511,20 @@ export const mockDb = {
     const dates = storage.getItem(`evt_opt_attendance_dates_${eventId}`);
     const fees = storage.getItem(`evt_opt_fees_${eventId}`);
 
+    const parsedSizes = sizes ? JSON.parse(sizes) : [];
+    const newSizes = ['110', '120', '130', '140', '150', 'XS', 'S', 'M', 'L', 'XL(LL)', '2XL(3L)', '3XL(4L)', '4XL(5L)'];
+    const hasOldSizes = parsedSizes.includes('XL') || parsedSizes.length === 0 || !parsedSizes.includes('XL(LL)');
+    const finalSizes = hasOldSizes ? newSizes : parsedSizes;
+
+    // 만약 예전 사이즈 규격이었으면 로컬 스토리지 데이터도 함께 갱신해줍니다.
+    if (hasOldSizes) {
+      storage.setItem(`evt_opt_shirt_sizes_${eventId}`, JSON.stringify(newSizes));
+    }
+
     return {
       departments: deps ? JSON.parse(deps) : [],
       birthYears: years ? JSON.parse(years) : [],
-      shirtSizes: sizes ? JSON.parse(sizes) : [],
+      shirtSizes: finalSizes,
       attendanceDates: dates ? JSON.parse(dates) : [],
       fees: fees ? JSON.parse(fees) : { '학생': 20000, '교사': 0, '봉사자': 0 }
     };

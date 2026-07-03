@@ -559,13 +559,21 @@ export const firebaseDb = {
   },
 
   getEventOptions(eventId: string) {
-    return memoryDb.eventOptions[eventId] || { 
+    const opts = memoryDb.eventOptions[eventId] || { 
       departments: [], 
       birthYears: [], 
       shirtSizes: [], 
       attendanceDates: [], 
       fees: { '학생': 20000, '교사': 0, '봉사자': 0 } 
     };
+
+    // 기존의 예전 셔츠 사이즈(또는 비어있는 경우)가 감지되면 신규 셔츠 사이즈로 자동 교체
+    const newSizes = ['110', '120', '130', '140', '150', 'XS', 'S', 'M', 'L', 'XL(LL)', '2XL(3L)', '3XL(4L)', '4XL(5L)'];
+    const hasOldSizes = opts.shirtSizes.includes('XL') || opts.shirtSizes.length === 0 || !opts.shirtSizes.includes('XL(LL)');
+    if (hasOldSizes) {
+      opts.shirtSizes = newSizes;
+    }
+    return opts;
   },
   updateEventOptions(eventId: string, options: { 
     departments?: string[]; 
