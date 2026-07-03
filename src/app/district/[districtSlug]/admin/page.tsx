@@ -196,7 +196,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     }
     try {
       const session = JSON.parse(sessStr);
-      if (!session.is_admin || session.district_id !== dist.id) {
+      const sessionDistId = session.district_id || session.districtId;
+      if (!session.is_admin || sessionDistId !== dist.id) {
         router.push(`/district/${districtSlug}/login`);
         return;
       }

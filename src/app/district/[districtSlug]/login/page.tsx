@@ -79,7 +79,9 @@ export default function LoginPage({ params }: PageProps) {
             name: result.name,
             is_admin: result.role === 'admin',
             districtId: result.role === 'super' ? '' : district.id,
-            districtSlug: result.role === 'super' ? '' : districtSlug
+            district_id: result.role === 'super' ? '' : district.id,
+            districtSlug: result.role === 'super' ? '' : districtSlug,
+            district_slug: result.role === 'super' ? '' : districtSlug
           }));
 
           if (result.role === 'super') {
