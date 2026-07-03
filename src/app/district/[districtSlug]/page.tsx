@@ -130,11 +130,8 @@ export default function DistrictHomePage({ params }: PageProps) {
             }
 
             <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-100 border border-slate-100 flex flex-col gap-6">
-            {/* Tag / Status Badge */}
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
-                {district.name} 연합 행사
-              </span>
+            {/* Status Badge */}
+            <div className="flex justify-end items-center">
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                 canRegister 
                   ? 'text-emerald-700 bg-emerald-50' 
@@ -146,7 +143,7 @@ export default function DistrictHomePage({ params }: PageProps) {
 
             {/* Event Title & Description */}
             <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-xl font-bold text-slate-900 leading-tight">
                 {event.name}
               </h1>
               <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
@@ -230,8 +227,8 @@ export default function DistrictHomePage({ params }: PageProps) {
                 내 신청 내역 조회 / 수정
               </Link>
             </div>
+            </div>
           </div>
-        </div>
       :
           <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center flex flex-col gap-4">
             <Info className="w-12 h-12 text-slate-400 mx-auto" />

@@ -801,7 +801,9 @@ export const mockDb = {
     const participants = this.getParticipants().filter(p => p.church_id === churchId);
     const overrides = this.getFeeOverrides().filter(o => o.church_id === churchId);
     
-    const activeEvent = this.getActiveEvent();
+    // 교회의 소속 지방회 ID를 통해 올바른 지방회 행사의 요금표를 가져옴
+    const church = this.getChurches().find(c => c.id === churchId);
+    const activeEvent = this.getActiveEvent(church?.district_id);
     const eventId = activeEvent?.id || 'evt-2026';
     const baseFees = this.getEventOptions(eventId).fees;
 

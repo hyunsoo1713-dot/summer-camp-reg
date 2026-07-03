@@ -134,7 +134,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
     const pSettings = db.getPaymentSettings(districtId) || null;
     setPaymentSettings(pSettings);
 
-    const pStatus = db.getChurchPaymentStatuses(districtId).find(s => s.church_id === churchId && s.event_id === eventId) || null;
+    const pStatus = db.getChurchPaymentStatuses(districtId).find(s => s.church_id === churchId) || null;
     setPaymentStatus(pStatus);
   };
 
