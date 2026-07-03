@@ -13,7 +13,7 @@ import {
 import { 
   Settings, Users, ShieldCheck, UserCheck, Download, Grid, Plus, Trash2, 
   Save, AlertTriangle, CheckCircle, ClipboardList, Info, FileSpreadsheet,
-  ArrowRight, ShieldAlert, Edit, LogOut
+  ArrowRight, ShieldAlert, Edit, LogOut, Copy
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -813,9 +813,23 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">{district.name} 연합 본부 관리</h1>
-            <p className="text-[10px] text-indigo-300 font-medium">
-              {event ? `활성 행사: ${event.name}` : '진행 중인 행사가 없습니다. 첫 행사를 등록해 주세요.'}
-            </p>
+            <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-3 mt-0.5">
+              <p className="text-[10px] text-indigo-300 font-medium">
+                {event ? `활성 행사: ${event.name}` : '진행 중인 행사가 없습니다. 첫 행사를 등록해 주세요.'}
+              </p>
+              <div 
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}/district/${districtSlug}`;
+                  navigator.clipboard.writeText(shareUrl);
+                  alert('참가 신청 주소가 클립보드에 복사되었습니다!\n학부모 및 개별 교회 담당자들에게 공유하세요.');
+                }}
+                className="flex items-center gap-1 bg-indigo-900/50 hover:bg-indigo-900 border border-indigo-800/80 px-2 py-0.5 rounded text-[9px] text-indigo-200 cursor-pointer transition-colors w-fit font-mono"
+                title="클릭하면 참가 신청 주소가 복사됩니다"
+              >
+                <Copy className="w-2.5 h-2.5 text-indigo-400" />
+                신청 주소 복사
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
