@@ -471,7 +471,7 @@ export const firebaseDb = {
     const defaultOptions = {
       departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등 1학년', '중등 2학년', '중등 3학년', '고등 1학년', '고등 2학년', '고등 3학년'],
       birthYears: defaultBirthYears,
-      shirtSizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
+      shirtSizes: ['110', '120', '130', '140', '150', 'XS', 'S', 'M', 'L', 'XL(LL)', '2XL(3L)', '3XL(4L)', '4XL(5L)'],
       attendanceDates: [
         { date: '2026-08-01', label: '1일차 (토)' },
         { date: '2026-08-02', label: '2일차 (일)' },
@@ -507,7 +507,7 @@ export const firebaseDb = {
     const defaultOptions = {
       departments: ['유아부', '유치부', '초등 1학년', '초등 2학년', '초등 3학년', '초등 4학년', '초등 5학년', '초등 6학년', '중등 1학년', '중등 2학년', '중등 3학년', '고등 1학년', '고등 2학년', '고등 3학년'],
       birthYears: ['2018년', '2019년', '2020년', '2021년', '2022년'],
-      shirtSizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
+      shirtSizes: ['110', '120', '130', '140', '150', 'XS', 'S', 'M', 'L', 'XL(LL)', '2XL(3L)', '3XL(4L)', '4XL(5L)'],
       attendanceDates: [
         { date: '2026-08-01', label: '1일차 (토)' },
         { date: '2026-08-02', label: '2일차 (일)' },

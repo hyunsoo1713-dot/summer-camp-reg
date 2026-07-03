@@ -446,21 +446,29 @@ export default function RegisterPage() {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-slate-700">티셔츠 사이즈</label>
             <div className="flex flex-wrap gap-2">
-              {options.shirtSizes.map(size => (
-                <button
-                  type="button"
-                  key={size}
-                  onClick={() => setShirtSize(size)}
-                  className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all-custom border ${
-                    shirtSize === size
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-50'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+              {(() => {
+                const isChildDeptActive = options.departments.some(d => 
+                  d.includes('유아') || d.includes('유치') || d.includes('초등')
+                );
+                const displaySizes = isChildDeptActive 
+                  ? options.shirtSizes 
+                  : options.shirtSizes.filter(size => !['110', '120', '130', '140', '150'].includes(size));
+                
+                return displaySizes.map(size => (
+                  <button
+                    type="button"
+                    key={size}
+                    onClick={() => setShirtSize(size)}
+                    className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all-custom border ${
+                      shirtSize === size
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-50'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ));
+              })()}            </div>
           </div>
 
           {/* 9. 참석 일정 선택 */}

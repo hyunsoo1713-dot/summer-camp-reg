@@ -534,21 +534,30 @@ export default function EditPage({ params }: PageProps) {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-bold text-slate-700">티셔츠 사이즈</label>
               <div className="flex flex-wrap gap-2">
-                {options.shirtSizes.map(size => (
-                  <button
-                    disabled={isEditDeadlinePassed}
-                    type="button"
-                    key={size}
-                    onClick={() => setShirtSize(size)}
-                    className={`py-2 px-3.5 rounded-lg text-xs font-bold border transition-all-custom ${
-                      shirtSize === size
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-slate-50 text-slate-600 border-slate-200'
-                    } ${isEditDeadlinePassed ? 'opacity-60 cursor-not-allowed' : ''}`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {(() => {
+                  const isChildDeptActive = options.departments.some(d => 
+                    d.includes('유아') || d.includes('유치') || d.includes('초등')
+                  );
+                  const displaySizes = isChildDeptActive 
+                    ? options.shirtSizes 
+                    : options.shirtSizes.filter(size => !['110', '120', '130', '140', '150'].includes(size));
+                  
+                  return displaySizes.map(size => (
+                    <button
+                      disabled={isEditDeadlinePassed}
+                      type="button"
+                      key={size}
+                      onClick={() => setShirtSize(size)}
+                      className={`py-2 px-3.5 rounded-lg text-xs font-bold border transition-all-custom ${
+                        shirtSize === size
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      } ${isEditDeadlinePassed ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      {size}
+                    </button>
+                  ));
+                })()}
               </div>
             </div>
 

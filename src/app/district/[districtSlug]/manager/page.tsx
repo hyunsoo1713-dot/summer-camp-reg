@@ -960,9 +960,17 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                   onChange={e => setPShirtSize(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
                 >
-                  {options.shirtSizes.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                  {(() => {
+                    const isChildDeptActive = options.departments.some(d => 
+                      d.includes('유아') || d.includes('유치') || d.includes('초등')
+                    );
+                    const displaySizes = isChildDeptActive 
+                      ? options.shirtSizes 
+                      : options.shirtSizes.filter(size => !['110', '120', '130', '140', '150'].includes(size));
+                    return displaySizes.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ));
+                  })()}
                 </select>
               </div>
 
