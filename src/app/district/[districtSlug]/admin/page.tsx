@@ -1453,13 +1453,12 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               </h3>
               
               <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                       <th className="p-3">신청자명</th>
                       <th className="p-3">신청 교회</th>
                       <th className="p-3">연락처</th>
-                      <th className="p-3">희망 아이디</th>
                       <th className="p-3">비고 / 신청 메모</th>
                       <th className="p-3 text-center">동작</th>
                     </tr>
@@ -1473,7 +1472,6 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
                           </td>
                           <td className="p-3">{m.phone}</td>
-                          <td className="p-3 font-mono">{m.login_id}</td>
                           <td className="p-3 text-slate-500">{m.memo || '-'}</td>
                           <td className="p-3 text-center">
                             <div className="flex justify-center gap-2">
@@ -1495,7 +1493,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="p-4 text-center text-slate-400">승인 대기 중인 신청이 없습니다.</td>
+                        <td colSpan={5} className="p-4 text-center text-slate-400">승인 대기 중인 신청이 없습니다.</td>
                       </tr>
                     )}
                   </tbody>
@@ -1516,12 +1514,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               </h3>
               
               <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                       <th className="p-3">이름</th>
                       <th className="p-3">연락처</th>
-                      <th className="p-3">로그인 아이디</th>
                       <th className="p-3 text-center">권한 및 가입 제어</th>
                     </tr>
                   </thead>
@@ -1532,8 +1529,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           <td className="p-3 font-semibold text-slate-900">
                             {(m.is_admin ?? (m.church_id === '')) ? '지방회 관리자' : m.name}
                           </td>
-                          <td className="p-3">{m.phone}</td>
-                          <td className="p-3 font-mono">{m.login_id}</td>
+                          <td className="p-3">
+                            {(m.is_admin ?? (m.church_id === '')) ? '-' : m.phone}
+                          </td>
                           <td className="p-3 text-center">
                             <div className="flex justify-center items-center gap-2 flex-wrap">
 
@@ -1566,7 +1564,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
+                        <td colSpan={3} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
                       </tr>
                     )}
                   </tbody>
