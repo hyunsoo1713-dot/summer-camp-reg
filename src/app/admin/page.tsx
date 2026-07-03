@@ -1012,10 +1012,10 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 lg:col-span-2 flex flex-col gap-4">
                 <h3 className="font-bold text-slate-800 text-sm">교회별 정산 및 납부 관리</h3>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                        <th className="p-3">교회명</th>
+                        <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">교회명</th>
                         <th className="p-3">인원수</th>
                         <th className="p-3">정산 금액</th>
                         <th className="p-3">납부 상태</th>
@@ -1028,8 +1028,8 @@ export default function AdminDashboard() {
                         const churchApprovedManagersCount = managers.filter(m => m.church_id === church.id && m.status === 'approved').length;
                         const churchRegsCount = participants.filter(p => p.church_id === church.id).length + churchApprovedManagersCount;
                         return (
-                          <tr key={church.id}>
-                            <td className="p-3 font-semibold text-slate-900">{church.name}</td>
+                          <tr key={church.id} className="hover:bg-slate-50/50 group">
+                            <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{church.name}</td>
                             <td className="p-3 font-bold">{churchRegsCount}명</td>
                             <td className="p-3 font-semibold text-indigo-600">
                               {(statusRecord?.total_amount || 0).toLocaleString()}원
@@ -1256,10 +1256,10 @@ export default function AdminDashboard() {
 
             {/* Table */}
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                    <th className="p-3">참가자명</th>
+                    <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">참가자명</th>
                     <th className="p-3">소속 교회</th>
                     <th className="p-3">구분 / 부서</th>
                     <th className="p-3">성별 / 셔츠</th>
@@ -1272,8 +1272,8 @@ export default function AdminDashboard() {
                     filteredParticipants.map(p => {
                       const ch = churches.find(c => c.id === p.church_id);
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/50">
-                          <td className="p-3 font-semibold text-slate-900">{p.name}</td>
+                        <tr key={p.id} className="hover:bg-slate-50/50 group">
+                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{p.name}</td>
                           <td className="p-3 font-semibold text-indigo-600">{ch?.name || '-'}</td>
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold mr-1 ${

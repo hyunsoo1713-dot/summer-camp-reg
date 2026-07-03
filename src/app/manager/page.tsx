@@ -555,10 +555,10 @@ export default function ManagerDashboard() {
 
             {/* Table Area */}
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                    <th className="p-3">참가자명</th>
+                    <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">참가자명</th>
                     <th className="p-3">구분 / 부서</th>
                     <th className="p-3">성별 / 셔츠</th>
                     <th className="p-3">연락처 / 보호자</th>
@@ -570,8 +570,8 @@ export default function ManagerDashboard() {
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filteredParticipants.length > 0 ? (
                     filteredParticipants.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 font-semibold text-slate-900">{p.name}</td>
+                      <tr key={p.id} className="hover:bg-slate-50/50 group">
+                        <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{p.name}</td>
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold mr-1 ${
                             p.participant_type === '학생' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
