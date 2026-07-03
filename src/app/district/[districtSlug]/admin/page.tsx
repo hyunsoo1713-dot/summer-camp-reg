@@ -1520,7 +1520,6 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                       <th className="p-3">이름</th>
-                      <th className="p-3">역할 / 소속</th>
                       <th className="p-3">연락처</th>
                       <th className="p-3">로그인 아이디</th>
                       <th className="p-3 text-center">권한 및 가입 제어</th>
@@ -1530,20 +1529,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     {approvedManagers.length > 0 ? (
                       approvedManagers.map(m => (
                         <tr key={m.id} className="hover:bg-slate-50/50">
-                          <td className="p-3 font-semibold text-slate-900">{m.name}</td>
-                          <td className="p-3">
-                            <div className="flex flex-col gap-1 items-start">
-                              {(m.is_admin ?? (m.church_id === '')) && (
-                                <span className="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded text-[10px]">
-                                  지방회 관리자 (어드민)
-                                </span>
-                              )}
-                              {(m.is_manager ?? (m.church_id !== '')) && (
-                                <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">
-                                  교회 담당자 ({churches.find(c => c.id === m.church_id)?.name || '소속 미정'})
-                                </span>
-                              )}
-                            </div>
+                          <td className="p-3 font-semibold text-slate-900">
+                            {(m.is_admin ?? (m.church_id === '')) ? '지방회 관리자' : m.name}
                           </td>
                           <td className="p-3">{m.phone}</td>
                           <td className="p-3 font-mono">{m.login_id}</td>
@@ -1564,20 +1551,22 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                 </select>
                               )}
 
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteManager(m.id, m.name)}
-                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[10px] transition-all-custom ml-2"
-                              >
-                                삭제
-                              </button>
+                              {!(m.is_admin ?? (m.church_id === '')) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteManager(m.id, m.name)}
+                                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[10px] transition-all-custom ml-2"
+                                >
+                                  삭제
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
+                        <td colSpan={4} className="p-4 text-center text-slate-400">등록된 회원 담당자가 없습니다.</td>
                       </tr>
                     )}
                   </tbody>
