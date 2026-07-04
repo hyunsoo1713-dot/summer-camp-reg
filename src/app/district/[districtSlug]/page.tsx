@@ -90,20 +90,22 @@ export default function DistrictHomePage({ params }: PageProps) {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* GNB / Navigation */}
-      <header className="w-full max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+      <header className="w-full max-w-4xl mx-auto px-4 py-4 flex justify-between items-center gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
             {district.name.substring(0, 1)}
           </div>
-          <span className="font-bold text-slate-800 text-lg">{district.name}</span>
+          <span className="font-bold text-slate-800 text-sm sm:text-lg truncate whitespace-nowrap">
+            {district.name}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <Link
             href={`/district/${districtSlug}/login`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all-custom"
+            className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all-custom whitespace-nowrap"
           >
-            <Settings className="w-4 h-4" />
-            지방회/교회 관리자
+            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            관리자 로그인
           </Link>
         </div>
       </header>
