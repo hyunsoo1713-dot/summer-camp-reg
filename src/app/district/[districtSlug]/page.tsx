@@ -22,6 +22,7 @@ export default function DistrictHomePage({ params }: PageProps) {
   const [canRegister, setCanRegister] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
   useEffect(() => {
     // 지방회 정보 찾기
@@ -115,10 +116,13 @@ export default function DistrictHomePage({ params }: PageProps) {
         {event ?
           <div className="flex flex-col gap-6">
             {/* 가정통신문 안내문 최상단 노출 */}
-            {event.notice_image_url &&
-              <div className="bg-white rounded-3xl p-5 shadow-xl shadow-slate-100/50 border border-slate-100/80 overflow-hidden hover:scale-[1.01] transition-all duration-300">
+            {event.notice_image_url && (
+              <div className="bg-white rounded-3xl p-5 shadow-xl shadow-slate-100/50 border border-slate-100/80 overflow-hidden hover:scale-[1.01] transition-all duration-300 flex flex-col gap-3">
                 <div 
-                  onClick={() => setShowImageModal(true)}
+                  onClick={() => {
+                    setCurrentImageIndex(0);
+                    setShowImageModal(true);
+                  }}
                   className="rounded-2xl overflow-hidden border border-slate-100/60 max-h-[450px] flex items-center justify-center bg-slate-50/50 cursor-zoom-in"
                   title="클릭하면 크게 확대하여 볼 수 있습니다"
                 >
@@ -128,8 +132,13 @@ export default function DistrictHomePage({ params }: PageProps) {
                     className="w-full object-contain mx-auto max-h-[450px]"
                   />
                 </div>
+                <div className="text-center">
+                  <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50/80 px-3 py-1.5 rounded-full inline-block shadow-sm">
+                    🔍 {event.notice_image_caption || ((event.notice_image_urls && event.notice_image_urls.length > 1) ? "클릭하면 가정통신문과 시간표도 볼 수 있습니다." : "클릭하면 상세 안내를 크게 볼 수 있습니다.")}
+                  </span>
+                </div>
               </div>
-            }
+            )}
 
             <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-100 border border-slate-100 flex flex-col gap-6">
             {/* Status Badge */}
@@ -256,25 +265,66 @@ export default function DistrictHomePage({ params }: PageProps) {
       </footer>
 
       {/* 이미지 크게 보기 모달 */}
-      {showImageModal && event && event.notice_image_url && (
-        <div 
-          className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-zoom-out"
-          onClick={() => setShowImageModal(false)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center bg-white rounded-2xl p-2 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={event.notice_image_url}
-              alt="가정통신문 크게보기"
-              className="max-w-full max-h-[85vh] object-contain rounded-lg"
-            />
-            <button
+      {showImageModal && event && (
+        (() => {
+          const urls = event.notice_image_urls || (event.notice_image_url ? [event.notice_image_url] : []);
+          const activeUrl = urls[currentImageIndex] || event.notice_image_url || '';
+          
+          return (
+            <div 
+              className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-zoom-out"
               onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 bg-slate-800/80 hover:bg-slate-900 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs border border-slate-700/50 shadow-md transition-colors"
             >
-              닫기
-            </button>
-          </div>
-        </div>
+              <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center bg-white rounded-2xl p-3 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                {/* 이미지 영역 */}
+                <div className="relative flex items-center justify-center w-full flex-1 max-h-[80vh] overflow-hidden bg-slate-50 rounded-xl p-2">
+                  {activeUrl ? (
+                    <img
+                      src={activeUrl}
+                      alt={`안내장 크게보기 ${currentImageIndex + 1}`}
+                      className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm"
+                    />
+                  ) : (
+                    <div className="text-slate-400 text-sm py-20">이미지를 불러올 수 없습니다.</div>
+                  )}
+
+                  {/* 좌우 이동 버튼 (복수 이미지일 때만 노출) */}
+                  {urls.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : urls.length - 1))}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center shadow-lg border border-slate-700/50 font-black cursor-pointer transition-colors"
+                        title="이전 이미지"
+                      >
+                        &lt;
+                      </button>
+                      <button
+                        onClick={() => setCurrentImageIndex(prev => (prev < urls.length - 1 ? prev + 1 : 0))}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center shadow-lg border border-slate-700/50 font-black cursor-pointer transition-colors"
+                        title="다음 이미지"
+                      >
+                        &gt;
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* 하단 툴바 및 인덱스 표시 */}
+                <div className="w-full flex justify-between items-center mt-3 px-2">
+                  <span className="text-xs font-bold text-slate-500">
+                    {urls.length > 1 ? `이미지 ${currentImageIndex + 1} / ${urls.length}` : '상세 안내 이미지'}
+                  </span>
+                  <button
+                    onClick={() => setShowImageModal(false)}
+                    className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer transition-colors"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()
       )}
     </div>
   );

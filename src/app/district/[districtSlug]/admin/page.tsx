@@ -252,6 +252,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const [feeTeacher, setFeeTeacher] = useState(0);
   const [feeVolunteer, setFeeVolunteer] = useState(0);
   const [noticeImageUrl, setNoticeImageUrl] = useState('');
+  const [noticeImageUrls, setNoticeImageUrls] = useState<string[]>([]);
+  const [noticeImageCaption, setNoticeImageCaption] = useState('');
   const [attendanceDates, setAttendanceDates] = useState<{ date: string; label: string }[]>([]);
   const [newAttDate, setNewAttDate] = useState('');
   const [newAttLabel, setNewAttLabel] = useState('');
@@ -356,6 +358,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
       setRegEnd(event.registration_end_date);
       setEditEnd(event.edit_deadline);
       setNoticeImageUrl(event.notice_image_url || '');
+      setNoticeImageUrls(event.notice_image_urls || (event.notice_image_url ? [event.notice_image_url] : []));
+      setNoticeImageCaption(event.notice_image_caption || '');
       setEventLocation(event.location || '');
     }
     if (paymentSettings) {
@@ -403,7 +407,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           reader.readAsDataURL(file);
         });
       }
-      setNoticeImageUrl(base64);
+      setNoticeImageUrls(prev => [...prev, base64]);
     } catch (err) {
       console.error(err);
       alert('이미지 처리 중 오류가 발생했습니다.');
@@ -436,6 +440,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         departments: activeDepartments
       };
 
+      const representativeImage = noticeImageUrls.length > 0 ? noticeImageUrls[0] : '';
       if (event) {
         // 1. 기존 행사 업데이트
         db.updateEvent(event.id, {
@@ -446,7 +451,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           registration_start_date: regStart,
           registration_end_date: regEnd,
           edit_deadline: editEnd,
-          notice_image_url: noticeImageUrl,
+          notice_image_url: representativeImage,
+          notice_image_urls: noticeImageUrls,
+          notice_image_caption: noticeImageCaption,
           location: eventLocation,
           options: eventOptions // 단일 쓰기로 병합
         });
@@ -463,7 +470,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           registration_end_date: regEnd || new Date().toISOString().substring(0, 10),
           edit_deadline: editEnd || new Date().toISOString().substring(0, 10),
           is_active: true,
-          notice_image_url: noticeImageUrl,
+          notice_image_url: representativeImage,
+          notice_image_urls: noticeImageUrls,
+          notice_image_caption: noticeImageCaption,
           location: eventLocation
         });
         targetEventId = newEvt.id;
@@ -638,7 +647,33 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   };
 
   // 필터링된 전체 참가자 리스트
-  const filteredParticipants = participants.filter(p => {
+  const approvedChurchManagers = managers.filter(m => m.status === 'approved' && m.church_id && !m.is_admin);
+
+  const mappedManagers: Participant[] = approvedChurchManagers.map(m => ({
+    id: m.id,
+    district_id: m.district_id,
+    event_id: event?.id || '',
+    church_id: m.church_id,
+    participant_type: '교사',
+    name: m.name,
+    gender: '남',
+    department: '교회담당자',
+    birth_year: '',
+    guardian_name: '',
+    guardian_phone: '',
+    personal_phone: m.phone,
+    shirt_size: m.shirt_size || '미선택',
+    photo_consent: true,
+    attendance_schedule: [],
+    edit_password_hash: '',
+    memo: m.memo || '교회 담당자 가입 계정',
+    created_at: m.created_at,
+    updated_at: m.created_at
+  }));
+
+  const allParticipants = [...participants, ...mappedManagers];
+
+  const filteredParticipants = allParticipants.filter(p => {
     const churchMap = new Map(churches.map(c => [c.id, c.name]));
     const churchName = churchMap.get(p.church_id) || '';
 
@@ -654,15 +689,15 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     if (presetName === 'all') {
       excelUtils.exportAllParticipants(filteredParticipants, churches, selectedExcelCols, `${district?.name}_전체_등록자_명단`);
     } else if (presetName === 'tshirt_summary') {
-      excelUtils.exportTshirtSummary(participants, churches, options.shirtSizes, `${district?.name}_교회별_티셔츠_사이즈_요약`);
+      excelUtils.exportTshirtSummary(allParticipants, churches, options.shirtSizes, `${district?.name}_교회별_티셔츠_사이즈_요약`);
     } else if (presetName === 'tshirt_detail') {
-      excelUtils.exportTshirtDetails(participants, churches, `${district?.name}_교회별_티셔츠_사이즈_상세`);
+      excelUtils.exportTshirtDetails(allParticipants, churches, `${district?.name}_교회별_티셔츠_사이즈_상세`);
     } else if (presetName === 'payment') {
-      excelUtils.exportPaymentStatus(churches, paymentStatuses, participants, `${district?.name}_교회별_참가비_납부현황`);
+      excelUtils.exportPaymentStatus(churches, paymentStatuses, allParticipants, `${district?.name}_교회별_참가비_납부현황`);
     } else if (presetName === 'groups') {
-      excelUtils.exportGroupMembers(participants, churches, groups, groupingGroups, `${district?.name}_조별_명단`);
+      excelUtils.exportGroupMembers(allParticipants, churches, groups, groupingGroups, `${district?.name}_조별_명단`);
     } else if (presetName === 'health') {
-      const healthList = participants.filter(p => p.health_note && p.health_note.trim());
+      const healthList = allParticipants.filter(p => p.health_note && p.health_note.trim());
       const formatted = healthList.map(p => {
         const ch = churches.find(c => c.id === p.church_id);
         return {
@@ -1031,9 +1066,12 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <div className="border-t border-slate-200 my-2"></div>
 
               {/* 가정통신문 안내 이미지 설정 */}
-              <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                <span>가정통신문(행사 안내) 이미지 설정</span>
-              </h4>
+              <div className="flex flex-col gap-1">
+                <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                  <span>가정통신문(행사 안내) 다중 이미지 설정</span>
+                </h4>
+                <p className="text-[10px] text-slate-400">학부모 접수 화면에서 메인 포스터와 함께 옆으로 넘겨볼 수 있는 가정통신문, 시간표 등의 이미지를 여러 장 등록할 수 있습니다.</p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-slate-600">안내 이미지 파일 업로드 (Base64 변환)</label>
@@ -1053,36 +1091,106 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-600">외부 이미지 웹 주소 (URL)</label>
-                  <input
-                    type="text"
-                    value={noticeImageUrl}
-                    onChange={e => setNoticeImageUrl(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-mono"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <label className="text-xs font-bold text-slate-600">외부 이미지 웹 주소 (URL) 직접 추가</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="custom_img_url_input"
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-mono"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById('custom_img_url_input') as HTMLInputElement;
+                        if (input && input.value.trim()) {
+                          setNoticeImageUrls(prev => [...prev, input.value.trim()]);
+                          input.value = '';
+                        }
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 rounded-xl text-xs cursor-pointer"
+                    >
+                      추가
+                    </button>
+                  </div>
                   <span className="text-[10px] text-slate-400 leading-relaxed">
-                    웹에 이미 업로드된 이미지 주소가 있다면 직접 붙여넣을 수 있습니다. 파일 업로드와 이 필드 중 하나만 입력하면 됩니다.
+                    웹에 업로드된 외부 이미지 주소가 있는 경우, 주소를 입력한 후 [추가] 버튼을 눌러 등록해주세요.
                   </span>
                 </div>
               </div>
 
-              {noticeImageUrl && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
-                  <span className="text-xs font-bold text-slate-600">안내 이미지 미리보기</span>
-                  <div className="relative rounded-lg overflow-hidden border border-slate-200 bg-white max-h-48 flex items-center justify-center">
-                    <img
-                      src={noticeImageUrl}
-                      alt="안내 이미지 미리보기"
-                      className="max-h-48 object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setNoticeImageUrl('')}
-                      className="absolute top-2 right-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold p-1 rounded-lg text-[10px] border border-rose-200"
-                    >
-                      삭제
-                    </button>
+              {/* 안내 이미지 하단 설명글 설정 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">안내 이미지 하단 설명글 (선택)</label>
+                <input
+                  type="text"
+                  value={noticeImageCaption}
+                  onChange={e => setNoticeImageCaption(e.target.value)}
+                  placeholder="예: 클릭하면 가정통신문과 시간표도 볼 수 있습니다."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-bold"
+                />
+                <p className="text-[10px] text-slate-400">이미지 하단에 노출될 설명 문구입니다. (비워둘 시 기본값으로 노출됩니다)</p>
+              </div>
+
+              {noticeImageUrls.length > 0 && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
+                  <span className="text-xs font-bold text-slate-600">등록된 안내 이미지 목록 ({noticeImageUrls.length}장)</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {noticeImageUrls.map((url, index) => (
+                      <div key={index} className="relative rounded-lg overflow-hidden border border-slate-200 bg-white p-1 flex flex-col gap-1.5 shadow-sm group">
+                        <div className="h-28 flex items-center justify-center overflow-hidden bg-slate-50 rounded-md">
+                          <img
+                            src={url}
+                            alt={`안내 이미지 ${index + 1}`}
+                            className="max-h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] px-1 font-bold text-slate-500">
+                          <span>{index === 0 ? '대표(포스터)' : `${index + 1}번 이미지`}</span>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => {
+                                const newUrls = [...noticeImageUrls];
+                                const temp = newUrls[index];
+                                newUrls[index] = newUrls[index - 1];
+                                newUrls[index - 1] = temp;
+                                setNoticeImageUrls(newUrls);
+                              }}
+                              className="text-indigo-600 hover:text-indigo-850 disabled:opacity-30 cursor-pointer"
+                              title="앞으로 이동"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === noticeImageUrls.length - 1}
+                              onClick={() => {
+                                const newUrls = [...noticeImageUrls];
+                                const temp = newUrls[index];
+                                newUrls[index] = newUrls[index + 1];
+                                newUrls[index + 1] = temp;
+                                setNoticeImageUrls(newUrls);
+                              }}
+                              className="text-indigo-600 hover:text-indigo-850 disabled:opacity-30 cursor-pointer"
+                              title="뒤로 이동"
+                            >
+                              ▼
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNoticeImageUrls(noticeImageUrls.filter((_, idx) => idx !== index));
+                              }}
+                              className="text-rose-600 hover:text-rose-800 font-semibold cursor-pointer"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1950,12 +2058,16 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           <td className="p-3">
                             <button
                               onClick={() => {
-                                if (confirm('이 참가자를 삭제하시겠습니까?')) {
-                                  db.deleteParticipant(p.id);
-                                  loadAllData(district.id, event?.id || '');
+                                if (p.department === '교회담당자') {
+                                  handleDeleteManager(p.id, p.name);
+                                } else {
+                                  if (confirm('이 참가자를 삭제하시겠습니까?')) {
+                                    db.deleteParticipant(p.id);
+                                    loadAllData(district.id, event?.id || '');
+                                  }
                                 }
                               }}
-                              className="text-rose-600 hover:underline"
+                              className="text-rose-600 hover:underline cursor-pointer"
                             >
                               삭제
                             </button>

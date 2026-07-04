@@ -21,6 +21,8 @@ export interface Event {
   edit_deadline: string;
   is_active: boolean;
   notice_image_url?: string;
+  notice_image_urls?: string[];
+  notice_image_caption?: string;
   location?: string;
   created_at: string;
   updated_at: string;
