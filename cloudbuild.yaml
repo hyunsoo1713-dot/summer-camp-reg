@@ -1,0 +1,26 @@
+steps:
+  # 1. Docker 이미지 빌드
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/summer-event-reg/summer-camp-app:latest', '.']
+
+  # 2. 빌드된 이미지를 Container Registry에 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/summer-event-reg/summer-camp-app:latest']
+
+  # 3. Cloud Run 서비스로 최신 버전 배포 실행
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'summer-camp-app'
+      - '--image'
+      - 'gcr.io/summer-event-reg/summer-camp-app:latest'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/summer-event-reg/summer-camp-app:latest'
