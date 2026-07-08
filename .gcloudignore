@@ -37,3 +37,4 @@ next-env.d.ts
 
 # DO NOT ignore .env for Cloud Build (빌드를 위해 .env 파일 업로드를 허용함)
 !.env
+!db_config.env
