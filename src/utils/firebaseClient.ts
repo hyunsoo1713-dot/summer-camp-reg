@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,3 +14,4 @@ const firebaseConfig = {
 // Next.js SSR 및 클라이언트 환경의 중복 초기화 예방
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const dbFirestore = getFirestore(app);
+export const storageFirebase = getStorage(app);

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { db } from '@/services/db';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
+import { storageFirebase } from '@/utils/firebaseClient';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   Event, Church, ChurchManager, Participant, SameGroupRequest,
   GroupingGroup, Group, GroupMember, PaymentSettings, ChurchFeeOverride, ChurchPaymentStatus, District 
@@ -423,31 +425,78 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // input 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = '';
 
     try {
-      let base64 = '';
-      if (file.size > 400 * 1024) {
-        // 400KB가 넘는 경우 또는 5MB 초과 대용량 파일인 경우 자동 압축 실행
-        base64 = await compressImage(file, 1200, 1200, 0.7);
-      } else {
-        base64 = await new Promise<string>((resolve) => {
+      // 1. 이미지 압축 (200KB 이하로 타이트하게 압축)
+      let compressedBlob: Blob;
+      const MAX_SIZE = 200 * 1024; // 200KB
+
+      const compressToBlob = (w: number, h: number, q: number): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string);
           reader.readAsDataURL(file);
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.src = ev.target?.result as string;
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              if (width > height) {
+                if (width > w) { height = Math.round((height * w) / width); width = w; }
+              } else {
+                if (height > h) { width = Math.round((width * h) / height); height = h; }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) { reject(new Error('Canvas error')); return; }
+              ctx.drawImage(img, 0, 0, width, height);
+              canvas.toBlob((blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('Blob 변환 실패'));
+              }, 'image/jpeg', q);
+            };
+            img.onerror = reject;
+          };
+          reader.onerror = reject;
         });
+      };
+
+      // 단계적으로 압축 (목표: 200KB 이하)
+      let w = 1200, h = 1200, q = 0.7;
+      compressedBlob = await compressToBlob(w, h, q);
+      for (let i = 0; i < 5 && compressedBlob.size > MAX_SIZE; i++) {
+        w = Math.round(w * 0.8);
+        h = Math.round(h * 0.8);
+        q = Math.max(0.2, q - 0.1);
+        compressedBlob = await compressToBlob(w, h, q);
       }
 
-      // 최종 변환 크기가 5MB를 초과하는지 최종 검증
-      const approxByteSize = (base64.length * 3) / 4;
-      if (approxByteSize > 5 * 1024 * 1024) {
-        alert('이미지 압축 후에도 용량이 5MB를 초과하여 업로드할 수 없습니다. 다른 이미지를 사용해 주세요.');
-        return;
+      // 2. Firebase Storage 업로드
+      const useMock = process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
+      if (!useMock) {
+        // 실서버: Firebase Storage에 업로드 후 URL만 저장
+        const eventId = event?.id || 'unknown';
+        const fileName = `events/${eventId}/images/${Date.now()}.jpg`;
+        const sRef = storageRef(storageFirebase, fileName);
+        const snapshot = await uploadBytes(sRef, compressedBlob);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        setNoticeImageUrls(prev => [...prev, downloadUrl]);
+      } else {
+        // 로컬/Mock: base64로 저장
+        const reader2 = new FileReader();
+        const base64 = await new Promise<string>((res) => {
+          reader2.onload = (ev) => res(ev.target?.result as string);
+          reader2.readAsDataURL(compressedBlob);
+        });
+        setNoticeImageUrls(prev => [...prev, base64]);
       }
-
-      setNoticeImageUrls(prev => [...prev, base64]);
     } catch (err) {
       console.error(err);
-      alert('이미지 처리 중 오류가 발생했습니다.');
+      alert('이미지 업로드 중 오류가 발생했습니다.');
     }
   };
 
