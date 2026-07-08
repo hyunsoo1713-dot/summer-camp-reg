@@ -36,6 +36,7 @@ export const excelUtils = {
       if (columns.includes('티셔츠 사이즈')) row['티셔츠 사이즈'] = p.shirt_size;
       if (columns.includes('알레르기/건강상 주의사항')) row['알레르기/건강상 주의사항'] = p.health_note || '-';
       if (columns.includes('사진 촬영 동의 여부')) row['사진 촬영 동의 여부'] = p.photo_consent ? '동의' : '미동의';
+      if (columns.includes('추가 동의 여부')) row['추가 동의 여부'] = p.custom_consent_agreed ? '동의' : '미동의';
       if (columns.includes('참석 일정')) row['참석 일정'] = p.attendance_schedule.join(', ');
       if (columns.includes('비고')) row['비고'] = p.memo || '-';
       return row;

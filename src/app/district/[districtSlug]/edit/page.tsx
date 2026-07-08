@@ -50,6 +50,7 @@ export default function EditPage({ params }: PageProps) {
   const [shirtSize, setShirtSize] = useState<string>('');
   const [healthNote, setHealthNote] = useState<string>('');
   const [photoConsent, setPhotoConsent] = useState<boolean>(true);
+  const [customConsentAgreed, setCustomConsentAgreed] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<string[]>([]);
   const [memo, setMemo] = useState<string>('');
 
@@ -154,6 +155,7 @@ export default function EditPage({ params }: PageProps) {
     setShirtSize(found.shirt_size);
     setHealthNote(found.health_note || '');
     setPhotoConsent(found.photo_consent);
+    setCustomConsentAgreed(found.custom_consent_agreed || false);
     setAttendance(found.attendance_schedule);
     setMemo(found.memo || '');
 
@@ -203,6 +205,10 @@ export default function EditPage({ params }: PageProps) {
       setErrorMsg('참석 일정을 최소 하루 이상 선택해 주세요.');
       return;
     }
+    if (event?.custom_consent_enabled && event.custom_consent_required && !customConsentAgreed) {
+      setErrorMsg(`'${event.custom_consent_title || '추가 동의서'}'에 동의해야 수정이 가능합니다.`);
+      return;
+    }
 
     try {
       db.updateParticipant(currentParticipant!.id, {
@@ -218,6 +224,7 @@ export default function EditPage({ params }: PageProps) {
         shirt_size: shirtSize,
         health_note: healthNote.trim(),
         photo_consent: photoConsent,
+        custom_consent_agreed: event?.custom_consent_enabled ? customConsentAgreed : false,
         attendance_schedule: attendance,
         memo: memo.trim()
       });
@@ -602,6 +609,28 @@ export default function EditPage({ params }: PageProps) {
                 행사 중 사진 및 영상 촬영, 연합 단체앨범 내의 인물 노출(얼굴 포함)에 동의합니다.
               </label>
             </div>
+
+            {/* 11-2. 추가 동의서 (지방회 관리자 설정에 따름) */}
+            {event?.custom_consent_enabled && (
+              <div className="flex items-start gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <input
+                  disabled={isEditDeadlinePassed}
+                  type="checkbox"
+                  id="customConsentAgreed"
+                  checked={customConsentAgreed}
+                  onChange={e => setCustomConsentAgreed(e.target.checked)}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 mt-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+                <label htmlFor="customConsentAgreed" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+                  <span className="font-bold text-slate-800">
+                    [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
+                  </span>
+                  {event.custom_consent_content && (
+                    <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                  )}
+                </label>
+              </div>
+            )}
 
             {/* 12. 건강 특이사항 */}
             <div className="flex flex-col gap-1.5">

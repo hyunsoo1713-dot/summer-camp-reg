@@ -44,6 +44,7 @@ export default function RegisterPage({ params }: PageProps) {
   const [healthNote, setHealthNote] = useState<string>('');
   const [photoConsent, setPhotoConsent] = useState<boolean>(true);
   const [privacyConsent, setPrivacyConsent] = useState<boolean>(false);
+  const [customConsentAgreed, setCustomConsentAgreed] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<string[]>([]);
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
@@ -163,6 +164,10 @@ export default function RegisterPage({ params }: PageProps) {
       setErrorMsg('개인정보 수집 및 이용에 동의해야 신청이 가능합니다.');
       return;
     }
+    if (event?.custom_consent_enabled && event.custom_consent_required && !customConsentAgreed) {
+      setErrorMsg(`'${event.custom_consent_title || '추가 동의서'}'에 동의해야 신청이 가능합니다.`);
+      return;
+    }
     if (!password || password.length < 4) {
       setErrorMsg('수정용 비밀번호는 최소 4글자 이상이어야 합니다.');
       return;
@@ -189,6 +194,7 @@ export default function RegisterPage({ params }: PageProps) {
         shirt_size: shirtSize,
         health_note: healthNote.trim(),
         photo_consent: photoConsent,
+        custom_consent_agreed: event?.custom_consent_enabled ? customConsentAgreed : false,
         attendance_schedule: attendance,
         edit_password_hash: hashPassword(password),
         memo: memo.trim()
@@ -211,6 +217,7 @@ export default function RegisterPage({ params }: PageProps) {
     setHealthNote('');
     setPhotoConsent(true);
     setPrivacyConsent(false);
+    setCustomConsentAgreed(false);
     setAttendance(options.attendanceDates.map((d: { date: string; label: string }) => d.date));
     setMemo('');
     setErrorMsg('');
@@ -581,6 +588,27 @@ export default function RegisterPage({ params }: PageProps) {
               <span className="font-bold text-indigo-950">[필수]</span> 개인정보 수집 및 이용에 동의합니다.
             </label>
           </div>
+
+          {/* 11-3. 추가 동의서 (지방회 관리자 설정에 따름) */}
+          {event?.custom_consent_enabled && (
+            <div className="flex items-start gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+              <input
+                type="checkbox"
+                id="customConsentAgreed"
+                checked={customConsentAgreed}
+                onChange={e => setCustomConsentAgreed(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 mt-0.5"
+              />
+              <label htmlFor="customConsentAgreed" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+                <span className="font-bold text-slate-800">
+                  [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
+                </span>
+                {event.custom_consent_content && (
+                  <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                )}
+              </label>
+            </div>
+          )}
 
           {/* 개인정보 영구 파기 정책 고지 */}
           <div className="flex items-start gap-2 bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 text-[10px] text-slate-500 leading-normal">

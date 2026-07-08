@@ -285,6 +285,10 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const [eventLocation, setEventLocation] = useState('');
   const [birthYearsInput, setBirthYearsInput] = useState('');
   const [activeDepartments, setActiveDepartments] = useState<string[]>(ALL_DEPARTMENTS);
+  const [customConsentEnabled, setCustomConsentEnabled] = useState<boolean>(false);
+  const [customConsentTitle, setCustomConsentTitle] = useState<string>('');
+  const [customConsentContent, setCustomConsentContent] = useState<string>('');
+  const [customConsentRequired, setCustomConsentRequired] = useState<boolean>(false);
 
   // 본부 관리자 비밀번호 변경 상태
   const [adminCurrentPw, setAdminCurrentPw] = useState('');
@@ -386,6 +390,10 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
       setNoticeImageUrls(event.notice_image_urls || (event.notice_image_url ? [event.notice_image_url] : []));
       setNoticeImageCaption(event.notice_image_caption || '');
       setEventLocation(event.location || '');
+      setCustomConsentEnabled(event.custom_consent_enabled || false);
+      setCustomConsentTitle(event.custom_consent_title || '');
+      setCustomConsentContent(event.custom_consent_content || '');
+      setCustomConsentRequired(event.custom_consent_required || false);
     }
     if (paymentSettings) {
       setBankName(paymentSettings.bank_name);
@@ -483,7 +491,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           notice_image_urls: noticeImageUrls,
           notice_image_caption: noticeImageCaption,
           location: eventLocation,
-          options: eventOptions // 단일 쓰기로 병합
+          options: eventOptions, // 단일 쓰기로 병합
+          custom_consent_enabled: customConsentEnabled,
+          custom_consent_title: customConsentTitle,
+          custom_consent_content: customConsentContent,
+          custom_consent_required: customConsentRequired
         });
         targetEventId = event.id;
       } else {
@@ -501,7 +513,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           notice_image_url: representativeImage,
           notice_image_urls: noticeImageUrls,
           notice_image_caption: noticeImageCaption,
-          location: eventLocation
+          location: eventLocation,
+          custom_consent_enabled: customConsentEnabled,
+          custom_consent_title: customConsentTitle,
+          custom_consent_content: customConsentContent,
+          custom_consent_required: customConsentRequired
         });
         targetEventId = newEvt.id;
         setEvent(newEvt);
@@ -663,7 +679,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   
   // 엑셀 열 선택 체크박스
   const [selectedExcelCols, setSelectedExcelCols] = useState<string[]>([
-    '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정'
+    '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부'
   ]);
 
   const toggleExcelCol = (colName: string) => {
@@ -1514,6 +1530,64 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <p className="text-[10px] text-slate-400">신청서와 수정 신청서의 유아부/유치부 출생년도 항목에 노출될 옵션 목록입니다. 쉼표(,)로 구분하여 연도 순서대로 입력해주세요.</p>
               </div>
 
+              <div className="border-t border-slate-200 my-2"></div>
+
+              {/* 커스텀 추가 동의서 설정 */}
+              <div className="flex flex-col gap-3 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>행사 추가 동의서 설정 (선택 사항)</span>
+                  </h4>
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={customConsentEnabled}
+                      onChange={e => setCustomConsentEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <span className="ml-2 text-xs font-bold text-slate-600">사용함</span>
+                  </label>
+                </div>
+                
+                {customConsentEnabled && (
+                  <div className="flex flex-col gap-3.5 pt-1">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-600">동의서 제목</label>
+                      <input
+                        type="text"
+                        value={customConsentTitle}
+                        onChange={e => setCustomConsentTitle(e.target.value)}
+                        placeholder="예: 물품 기증 및 참가 동의서"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-bold"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-600">동의서 상세 약관 내용</label>
+                      <textarea
+                        rows={3}
+                        value={customConsentContent}
+                        onChange={e => setCustomConsentContent(e.target.value)}
+                        placeholder="동의서 내용을 상세하게 입력해 주세요."
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring resize-y font-medium"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="customConsentRequired"
+                        checked={customConsentRequired}
+                        onChange={e => setCustomConsentRequired(e.target.checked)}
+                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                      />
+                      <label htmlFor="customConsentRequired" className="text-xs text-slate-600 leading-normal cursor-pointer select-none font-bold">
+                        필수 동의 항목으로 설정 (체크하지 않으면 신청 불가)
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all-custom text-xs shadow-md flex items-center justify-center gap-1.5"
@@ -1945,7 +2019,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider">엑셀 출력 컬럼 커스텀 선택</h4>
               <div className="flex flex-wrap gap-2">
                 {[
-                  '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '비고'
+                  '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부', '비고'
                 ].map(col => {
                   const isChecked = selectedExcelCols.includes(col);
                   return (

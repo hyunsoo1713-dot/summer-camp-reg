@@ -24,6 +24,10 @@ export interface Event {
   notice_image_urls?: string[];
   notice_image_caption?: string;
   location?: string;
+  custom_consent_enabled?: boolean;
+  custom_consent_title?: string;
+  custom_consent_content?: string;
+  custom_consent_required?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +75,7 @@ export interface Participant {
   shirt_size: string;
   health_note?: string;
   photo_consent: boolean;
+  custom_consent_agreed?: boolean;
   attendance_schedule: string[];
   edit_password_hash: string;
   memo?: string;
