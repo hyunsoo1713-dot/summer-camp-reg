@@ -501,7 +501,7 @@ export default function EditPage() {
                     key={d.date}
                     className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all-custom ${
                       attendance.includes(d.date)
-                        ? 'bg-indigo-50/50 border-indigo-200 text-slate-900'
+                        ? 'bg-indigo-50 border-indigo-500 text-indigo-900 font-semibold'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     } ${isEditDeadlinePassed ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >

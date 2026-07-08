@@ -43,6 +43,7 @@ export default function RegisterPage({ params }: PageProps) {
   const [shirtSize, setShirtSize] = useState<string>('');
   const [healthNote, setHealthNote] = useState<string>('');
   const [photoConsent, setPhotoConsent] = useState<boolean>(true);
+  const [privacyConsent, setPrivacyConsent] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<string[]>([]);
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
@@ -158,6 +159,10 @@ export default function RegisterPage({ params }: PageProps) {
       setErrorMsg('참석 일정을 최소 하루 이상 선택해주세요.');
       return;
     }
+    if (!privacyConsent) {
+      setErrorMsg('개인정보 수집 및 이용에 동의해야 신청이 가능합니다.');
+      return;
+    }
     if (!password || password.length < 4) {
       setErrorMsg('수정용 비밀번호는 최소 4글자 이상이어야 합니다.');
       return;
@@ -205,6 +210,7 @@ export default function RegisterPage({ params }: PageProps) {
     if (options.shirtSizes.length > 0) setShirtSize(options.shirtSizes[0]);
     setHealthNote('');
     setPhotoConsent(true);
+    setPrivacyConsent(false);
     setAttendance(options.attendanceDates.map((d: { date: string; label: string }) => d.date));
     setMemo('');
     setErrorMsg('');
@@ -535,13 +541,13 @@ export default function RegisterPage({ params }: PageProps) {
                     onClick={() => handleAttendanceChange(dateObj.date)}
                     className={`py-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all-custom ${
                       isSelected
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold'
+                        ? 'bg-indigo-600 border-indigo-600 text-white font-bold shadow-md shadow-indigo-100'
                         : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <Calendar className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <Calendar className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
                     <span className="text-2xs font-semibold">{dateObj.label}</span>
-                    <span className="text-[9px] text-slate-400 font-medium font-mono">{dateObj.date.substring(5)}</span>
+                    <span className={`text-[9px] font-medium font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{dateObj.date.substring(5)}</span>
                   </button>
                 );
               })}
@@ -559,6 +565,20 @@ export default function RegisterPage({ params }: PageProps) {
             />
             <label htmlFor="photoConsent" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
               행사 중 사진 및 영상 촬영, 연합 단체앨범 내의 인물 노출(얼굴 포함)에 동의합니다.
+            </label>
+          </div>
+
+          {/* 11-2. 개인정보 수집 및 이용 동의 */}
+          <div className="flex items-center gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              checked={privacyConsent}
+              onChange={e => setPrivacyConsent(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+            />
+            <label htmlFor="privacyConsent" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+              <span className="font-bold text-indigo-950">[필수]</span> 개인정보 수집 및 이용에 동의합니다.
             </label>
           </div>
 

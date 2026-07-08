@@ -23,47 +23,72 @@ const ALL_DEPARTMENTS = [
   '고등 1학년', '고등 2학년', '고등 3학년'
 ];
 
-const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.6): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+const compressImage = async (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.7): Promise<string> => {
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+  const runCompress = (w: number, h: number, q: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > w) {
+              height = Math.round((height * w) / width);
+              width = w;
+            }
+          } else {
+            if (height > h) {
+              width = Math.round((width * h) / height);
+              height = h;
+            }
           }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(event.target?.result as string);
+            return;
           }
-        }
 
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(event.target?.result as string);
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressedBase64);
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', q);
+          resolve(compressedBase64);
+        };
+        img.onerror = (err) => reject(err);
       };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  let currentMaxWidth = maxWidth;
+  let currentMaxHeight = maxHeight;
+  let currentQuality = quality;
+  let attempts = 0;
+
+  while (attempts < 5) {
+    const base64 = await runCompress(currentMaxWidth, currentMaxHeight, currentQuality);
+    const approxByteSize = (base64.length * 3) / 4;
+
+    if (approxByteSize <= MAX_SIZE_BYTES) {
+      return base64;
+    }
+
+    currentMaxWidth = Math.round(currentMaxWidth * 0.8);
+    currentMaxHeight = Math.round(currentMaxHeight * 0.8);
+    currentQuality = Math.max(0.2, currentQuality - 0.15);
+    attempts++;
+  }
+
+  return runCompress(600, 600, 0.2);
 };
 
 interface PageProps {
@@ -390,16 +415,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 파일 용량은 최대 5MB 이하만 업로드 가능합니다.');
-      return;
-    }
-
     try {
       let base64 = '';
       if (file.size > 400 * 1024) {
-        // 400KB가 넘는 경우 압축 실행
-        base64 = await compressImage(file, 1200, 1200, 0.6);
+        // 400KB가 넘는 경우 또는 5MB 초과 대용량 파일인 경우 자동 압축 실행
+        base64 = await compressImage(file, 1200, 1200, 0.7);
       } else {
         base64 = await new Promise<string>((resolve) => {
           const reader = new FileReader();
@@ -407,6 +427,14 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           reader.readAsDataURL(file);
         });
       }
+
+      // 최종 변환 크기가 5MB를 초과하는지 최종 검증
+      const approxByteSize = (base64.length * 3) / 4;
+      if (approxByteSize > 5 * 1024 * 1024) {
+        alert('이미지 압축 후에도 용량이 5MB를 초과하여 업로드할 수 없습니다. 다른 이미지를 사용해 주세요.');
+        return;
+      }
+
       setNoticeImageUrls(prev => [...prev, base64]);
     } catch (err) {
       console.error(err);
@@ -1086,7 +1114,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       클릭하거나 이미지 파일을 여기에 드래그앤드롭
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      최대 용량 500KB 이하 (안정적인 저장을 위해 이미지를 압축하여 올려주세요)
+                      최대 용량 5MB 이하 (5MB 초과 시 자동으로 압축되어 업로드됩니다)
                     </span>
                   </div>
                 </div>

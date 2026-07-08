@@ -575,13 +575,13 @@ export default function EditPage({ params }: PageProps) {
                       onClick={() => handleAttendanceChange(dateObj.date)}
                       className={`py-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all-custom ${
                         isSelected
-                          ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold'
+                          ? 'bg-indigo-600 border-indigo-600 text-white font-bold shadow-md shadow-indigo-100'
                           : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                       } ${isEditDeadlinePassed ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
-                      <Calendar className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                      <Calendar className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
                       <span className="text-2xs font-semibold">{dateObj.label}</span>
-                      <span className="text-[9px] text-slate-400 font-medium font-mono">{dateObj.date.substring(5)}</span>
+                      <span className={`text-[9px] font-medium font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{dateObj.date.substring(5)}</span>
                     </button>
                   );
                 })}

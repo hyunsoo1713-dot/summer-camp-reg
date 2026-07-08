@@ -34,6 +34,7 @@ export default function RegisterPage() {
   const [shirtSize, setShirtSize] = useState<string>('');
   const [healthNote, setHealthNote] = useState<string>('');
   const [photoConsent, setPhotoConsent] = useState<boolean>(true);
+  const [privacyConsent, setPrivacyConsent] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<string[]>([]);
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
@@ -130,6 +131,10 @@ export default function RegisterPage() {
       setErrorMsg('참석 일정을 최소 하루 이상 선택해주세요.');
       return;
     }
+    if (!privacyConsent) {
+      setErrorMsg('개인정보 수집 및 이용에 동의해야 신청이 가능합니다.');
+      return;
+    }
     if (!password || password.length < 4) {
       setErrorMsg('수정용 비밀번호는 최소 4글자 이상이어야 합니다.');
       return;
@@ -176,6 +181,7 @@ export default function RegisterPage() {
     if (options.shirtSizes.length > 0) setShirtSize(options.shirtSizes[0]);
     setHealthNote('');
     setPhotoConsent(true);
+    setPrivacyConsent(false);
     setAttendance(options.attendanceDates.map((d: { date: string; label: string }) => d.date));
     setMemo('');
     setErrorMsg('');
@@ -480,7 +486,7 @@ export default function RegisterPage() {
                   key={d.date}
                   className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all-custom ${
                     attendance.includes(d.date)
-                      ? 'bg-indigo-50/50 border-indigo-200 text-slate-900'
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-900 font-semibold'
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -521,6 +527,20 @@ export default function RegisterPage() {
             />
             <label htmlFor="photoConsent" className="text-xs text-slate-600 leading-relaxed cursor-pointer select-none">
               <span className="font-bold text-slate-800">[사진 촬영 및 활용 동의]</span> 행사진행 중 촬영된 단체사진 및 활동사진은 교회연합행사 보고자료 및 보관용으로 사용될 수 있습니다. 동의하십니까? (미동의 시 얼굴이 노출되지 않도록 조치함)
+            </label>
+          </div>
+
+          {/* 11-2. 개인정보 수집 및 이용 동의 */}
+          <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              checked={privacyConsent}
+              onChange={e => setPrivacyConsent(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 mt-0.5"
+            />
+            <label htmlFor="privacyConsent" className="text-xs text-slate-600 leading-relaxed cursor-pointer select-none">
+              <span className="font-bold text-slate-800">[개인정보 수집 및 이용 동의 (필수)]</span> 성경학교 행사 관리 및 참가자 관리를 위해 개인정보 수집 및 이용에 동의합니다.
             </label>
           </div>
 
