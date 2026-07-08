@@ -455,55 +455,60 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     if (!district) return;
 
     try {
-      const sortedDates = [...attendanceDates].sort((a, b) => a.date.localeCompare(b.date));
+      // 안전한 날짜 정렬 처리 (date 프로퍼티 누락 예방)
+      const sortedDates = [...(attendanceDates || [])]
+        .filter(d => d && typeof d.date === 'string')
+        .sort((a, b) => a.date.localeCompare(b.date));
+        
       const calculatedStart = sortedDates.length > 0 ? sortedDates[0].date : new Date().toISOString().substring(0, 10);
       const calculatedEnd = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1].date : new Date().toISOString().substring(0, 10);
 
       let targetEventId = '';
-      const cleanBirthYears = birthYearsInput
+      // 안전한 출생년도 배열 변환
+      const cleanBirthYears = (birthYearsInput || '')
         .split(',')
         .map(y => y.trim())
         .filter(y => y !== '');
 
       const eventOptions = {
         fees: {
-          '학생': feeStudent,
-          '교사': feeTeacher,
-          '봉사자': feeVolunteer
+          '학생': feeStudent || 0,
+          '교사': feeTeacher || 0,
+          '봉사자': feeVolunteer || 0
         },
-        attendanceDates: attendanceDates,
+        attendanceDates: attendanceDates || [],
         birthYears: cleanBirthYears,
-        departments: activeDepartments
+        departments: activeDepartments || []
       };
 
       const representativeImage = noticeImageUrls.length > 0 ? noticeImageUrls[0] : '';
       if (event) {
         // 1. 기존 행사 업데이트
         db.updateEvent(event.id, {
-          name: eventName,
-          description: eventDesc,
+          name: eventName || '',
+          description: eventDesc || '',
           start_date: calculatedStart,
           end_date: calculatedEnd,
-          registration_start_date: regStart,
-          registration_end_date: regEnd,
-          edit_deadline: editEnd,
+          registration_start_date: regStart || '',
+          registration_end_date: regEnd || '',
+          edit_deadline: editEnd || '',
           notice_image_url: representativeImage,
-          notice_image_urls: noticeImageUrls,
-          notice_image_caption: noticeImageCaption,
-          location: eventLocation,
+          notice_image_urls: noticeImageUrls || [],
+          notice_image_caption: noticeImageCaption || '',
+          location: eventLocation || '',
           options: eventOptions, // 단일 쓰기로 병합
-          custom_consent_enabled: customConsentEnabled,
-          custom_consent_title: customConsentTitle,
-          custom_consent_content: customConsentContent,
-          custom_consent_required: customConsentRequired
+          custom_consent_enabled: !!customConsentEnabled,
+          custom_consent_title: customConsentTitle || '',
+          custom_consent_content: customConsentContent || '',
+          custom_consent_required: !!customConsentRequired
         });
         targetEventId = event.id;
       } else {
         // 행사가 아예 없던 경우 신규 개설
         const newEvt = db.createEvent({
           district_id: district.id,
-          name: eventName,
-          description: eventDesc,
+          name: eventName || '',
+          description: eventDesc || '',
           start_date: calculatedStart,
           end_date: calculatedEnd,
           registration_start_date: regStart || new Date().toISOString().substring(0, 10),
@@ -511,13 +516,13 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           edit_deadline: editEnd || new Date().toISOString().substring(0, 10),
           is_active: true,
           notice_image_url: representativeImage,
-          notice_image_urls: noticeImageUrls,
-          notice_image_caption: noticeImageCaption,
-          location: eventLocation,
-          custom_consent_enabled: customConsentEnabled,
-          custom_consent_title: customConsentTitle,
-          custom_consent_content: customConsentContent,
-          custom_consent_required: customConsentRequired
+          notice_image_urls: noticeImageUrls || [],
+          notice_image_caption: noticeImageCaption || '',
+          location: eventLocation || '',
+          custom_consent_enabled: !!customConsentEnabled,
+          custom_consent_title: customConsentTitle || '',
+          custom_consent_content: customConsentContent || '',
+          custom_consent_required: !!customConsentRequired
         });
         targetEventId = newEvt.id;
         setEvent(newEvt);
@@ -525,18 +530,19 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         db.updateEventOptions(targetEventId, eventOptions);
       }
 
-      // 2. 본부 계좌 업데이트
+      // 2. 본부 계좌 업데이트 (빈 값 및 null 예방)
       db.updatePaymentSettings({
         district_id: district.id,
-        bank_name: bankName,
-        account_number: accNum,
-        account_holder: accHolder,
-        memo: bankMemo
+        bank_name: bankName || '',
+        account_number: accNum || '',
+        account_holder: accHolder || '',
+        memo: bankMemo || ''
       });
 
       alert('행사 설정이 성공적으로 저장되었습니다.');
       loadAllData(district.id, targetEventId);
     } catch (err: any) {
+      console.error("Save settings failed with error:", err);
       alert(err.message || '저장 중 오류 발생');
     }
   };
