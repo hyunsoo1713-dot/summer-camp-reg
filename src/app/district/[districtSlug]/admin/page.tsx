@@ -6,8 +6,6 @@ import Link from 'next/link';
 import { db } from '@/services/db';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
-import { storageFirebase } from '@/utils/firebaseClient';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   Event, Church, ChurchManager, Participant, SameGroupRequest,
   GroupingGroup, Group, GroupMember, PaymentSettings, ChurchFeeOverride, ChurchPaymentStatus, District 
@@ -425,15 +423,13 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // input 초기화 (같은 파일 재선택 가능하도록)
     e.target.value = '';
 
     try {
-      // 1. 이미지 압축 (200KB 이하로 타이트하게 압축)
-      let compressedBlob: Blob;
-      const MAX_SIZE = 200 * 1024; // 200KB
+      // Firestore 1MB 문서 제한을 고려해 이미지당 최대 150KB로 압축
+      const MAX_SIZE = 150 * 1024; // 150KB
 
-      const compressToBlob = (w: number, h: number, q: number): Promise<Blob> => {
+      const compressToBase64 = (w: number, h: number, q: number): Promise<string> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsDataURL(file);
@@ -452,12 +448,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               canvas.width = width;
               canvas.height = height;
               const ctx = canvas.getContext('2d');
-              if (!ctx) { reject(new Error('Canvas error')); return; }
+              if (!ctx) { reject(new Error('Canvas 오류')); return; }
               ctx.drawImage(img, 0, 0, width, height);
-              canvas.toBlob((blob) => {
-                if (blob) resolve(blob);
-                else reject(new Error('Blob 변환 실패'));
-              }, 'image/jpeg', q);
+              resolve(canvas.toDataURL('image/jpeg', q));
             };
             img.onerror = reject;
           };
@@ -465,38 +458,20 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         });
       };
 
-      // 단계적으로 압축 (목표: 200KB 이하)
+      // 단계적으로 압축해 150KB 이하 달성
       let w = 1200, h = 1200, q = 0.7;
-      compressedBlob = await compressToBlob(w, h, q);
-      for (let i = 0; i < 5 && compressedBlob.size > MAX_SIZE; i++) {
+      let base64 = await compressToBase64(w, h, q);
+      for (let i = 0; i < 6 && (base64.length * 3 / 4) > MAX_SIZE; i++) {
         w = Math.round(w * 0.8);
         h = Math.round(h * 0.8);
         q = Math.max(0.2, q - 0.1);
-        compressedBlob = await compressToBlob(w, h, q);
+        base64 = await compressToBase64(w, h, q);
       }
 
-      // 2. Firebase Storage 업로드
-      const useMock = process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
-      if (!useMock) {
-        // 실서버: Firebase Storage에 업로드 후 URL만 저장
-        const eventId = event?.id || 'unknown';
-        const fileName = `events/${eventId}/images/${Date.now()}.jpg`;
-        const sRef = storageRef(storageFirebase, fileName);
-        const snapshot = await uploadBytes(sRef, compressedBlob);
-        const downloadUrl = await getDownloadURL(snapshot.ref);
-        setNoticeImageUrls(prev => [...prev, downloadUrl]);
-      } else {
-        // 로컬/Mock: base64로 저장
-        const reader2 = new FileReader();
-        const base64 = await new Promise<string>((res) => {
-          reader2.onload = (ev) => res(ev.target?.result as string);
-          reader2.readAsDataURL(compressedBlob);
-        });
-        setNoticeImageUrls(prev => [...prev, base64]);
-      }
+      setNoticeImageUrls(prev => [...prev, base64]);
     } catch (err) {
       console.error(err);
-      alert('이미지 업로드 중 오류가 발생했습니다.');
+      alert('이미지 처리 중 오류가 발생했습니다.');
     }
   };
 
