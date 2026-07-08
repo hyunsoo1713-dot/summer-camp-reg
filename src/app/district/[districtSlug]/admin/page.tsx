@@ -378,7 +378,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     }
   };
 
-  // 로딩 시 설정 채우기
+  // 로딩 시 설정 채우기 (event ID가 처음 세팅될 때, 또는 paymentSettings/options 최초 로딩 시 1회만 실행)
   useEffect(() => {
     if (event) {
       setEventName(event.name);
@@ -417,7 +417,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     } else {
       setActiveDepartments(ALL_DEPARTMENTS);
     }
-  }, [event, paymentSettings, options]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event?.id]); // event.id가 처음 로딩될 때만 1회 실행 (저장 후 event 객체 참조 변경 시 리셋 방지)
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
