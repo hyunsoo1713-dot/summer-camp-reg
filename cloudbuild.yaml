@@ -24,3 +24,6 @@ steps:
 
 images:
   - 'gcr.io/summer-event-reg/summer-camp-app:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
