@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { db } from '@/services/db';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
+import { storageFirebase } from '@/utils/firebaseClient';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   Event, Church, ChurchManager, Participant, SameGroupRequest,
   GroupingGroup, Group, GroupMember, PaymentSettings, ChurchFeeOverride, ChurchPaymentStatus, District 
@@ -426,10 +428,10 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     e.target.value = '';
 
     try {
-      // Firestore 1MB 문서 제한을 고려해 이미지당 최대 150KB로 압축
-      const MAX_SIZE = 150 * 1024; // 150KB
+      // 1. 이미지 압축 (최대 800KB → 용량 절약, Firebase Storage 업로드)
+      const MAX_SIZE = 800 * 1024; // 800KB
 
-      const compressToBase64 = (w: number, h: number, q: number): Promise<string> => {
+      const compressToBlob = (w: number, h: number, q: number): Promise<Blob> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsDataURL(file);
@@ -450,7 +452,10 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               const ctx = canvas.getContext('2d');
               if (!ctx) { reject(new Error('Canvas 오류')); return; }
               ctx.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', q));
+              canvas.toBlob((blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('Blob 변환 실패'));
+              }, 'image/jpeg', q);
             };
             img.onerror = reject;
           };
@@ -458,20 +463,26 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         });
       };
 
-      // 단계적으로 압축해 150KB 이하 달성
-      let w = 1200, h = 1200, q = 0.7;
-      let base64 = await compressToBase64(w, h, q);
-      for (let i = 0; i < 6 && (base64.length * 3 / 4) > MAX_SIZE; i++) {
+      // 단계적으로 압축해 800KB 이하 달성
+      let w = 1920, h = 1920, q = 0.85;
+      let blob = await compressToBlob(w, h, q);
+      for (let i = 0; i < 5 && blob.size > MAX_SIZE; i++) {
         w = Math.round(w * 0.8);
         h = Math.round(h * 0.8);
-        q = Math.max(0.2, q - 0.1);
-        base64 = await compressToBase64(w, h, q);
+        q = Math.max(0.3, q - 0.1);
+        blob = await compressToBlob(w, h, q);
       }
 
-      setNoticeImageUrls(prev => [...prev, base64]);
+      // 2. Firebase Storage 업로드 → URL만 Firestore에 저장
+      const eventId = event?.id || 'common';
+      const fileName = `events/${eventId}/images/${Date.now()}.jpg`;
+      const sRef = storageRef(storageFirebase, fileName);
+      const snapshot = await uploadBytes(sRef, blob);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      setNoticeImageUrls(prev => [...prev, downloadUrl]);
     } catch (err) {
       console.error(err);
-      alert('이미지 처리 중 오류가 발생했습니다.');
+      alert('이미지 업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -2522,6 +2533,63 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           </div>
         )}
       </main>
+
+      {/* 커스텀 확인/입력 모달 */}
+      {customModal && customModal.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-100 flex flex-col gap-4">
+            <div>
+              <h3 className="font-bold text-slate-800 text-base">{customModal.title}</h3>
+              <p className="text-xs text-slate-500 mt-2 whitespace-pre-line leading-relaxed">{customModal.message}</p>
+            </div>
+            
+            {customModal.type === 'prompt' && (
+              <input
+                id="custom-modal-input"
+                type="text"
+                defaultValue={customModal.defaultValue}
+                placeholder={customModal.placeholder}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-600 focus:bg-white input-focus-ring"
+              />
+            )}
+            
+            {customModal.type === 'select' && (
+              <select
+                id="custom-modal-select"
+                defaultValue={customModal.defaultValue}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-600 focus:bg-white input-focus-ring"
+              >
+                {customModal.options?.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            )}
+            
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                onClick={customModal.onCancel}
+                className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 rounded-lg border border-slate-200 transition-all-custom"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  let val = undefined;
+                  if (customModal.type === 'prompt') {
+                    val = (document.getElementById('custom-modal-input') as HTMLInputElement)?.value;
+                  } else if (customModal.type === 'select') {
+                    val = (document.getElementById('custom-modal-select') as HTMLSelectElement)?.value;
+                  }
+                  customModal.onConfirm(val);
+                }}
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all-custom"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
