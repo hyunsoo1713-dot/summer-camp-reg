@@ -32,7 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-db_config.env
+# db_config.env (Cloud Build 배포를 위해 깃허브 업로드 허용)
 
 # vercel
 .vercel
