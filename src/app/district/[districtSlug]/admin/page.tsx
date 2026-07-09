@@ -1734,57 +1734,11 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 )}
               </h3>
               
-              {/* 1-1. 모바일 화면 (카드 레이아웃) */}
-              <div className="block sm:hidden flex flex-col gap-3">
-                {pendingManagers.length > 0 ? (
-                  pendingManagers.map(m => (
-                    <div key={m.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-sm">{m.name}</h4>
-                          <span className="text-[10px] font-bold text-indigo-600">
-                            {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
-                          </span>
-                        </div>
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">
-                          {m.shirt_size || '-'}
-                        </span>
-                      </div>
-                      
-                      <div className="text-[11px] text-slate-500 flex flex-col gap-1 mt-1 border-t border-slate-200/60 pt-2">
-                        <div><span className="font-semibold text-slate-700">연락처:</span> {m.phone}</div>
-                        {m.memo && <div><span className="font-semibold text-slate-700">신청 메모:</span> {m.memo}</div>}
-                      </div>
-                      
-                      <div className="flex gap-2 mt-2 pt-2 border-t border-slate-200/60">
-                        <button
-                          onClick={() => handleApproveManager(m)}
-                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs transition-all-custom"
-                        >
-                          승인
-                        </button>
-                        <button
-                          onClick={() => handleRejectManager(m.id)}
-                          className="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-2 rounded-lg text-xs border border-rose-200 transition-all-custom"
-                        >
-                          반려
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="bg-slate-50 rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                    승인 대기 중인 신청이 없습니다.
-                  </div>
-                )}
-              </div>
-
-              {/* 1-2. 데스크톱 화면 (테이블 레이아웃) */}
-              <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">신청자명</th>
+                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[90px]">신청자명</th>
                       <th className="p-3">신청 교회</th>
                       <th className="p-3">연락처</th>
                       <th className="p-3">티셔츠</th>
@@ -1796,7 +1750,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     {pendingManagers.length > 0 ? (
                       pendingManagers.map(m => (
                         <tr key={m.id} className="hover:bg-slate-50/50 group">
-                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{m.name}</td>
+                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[90px]">{m.name}</td>
                           <td className="p-3 font-semibold text-indigo-600">
                             {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
                           </td>
@@ -1851,7 +1805,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">이름</th>
+                      <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[90px]">이름</th>
                       <th className="p-3">연락처</th>
                       <th className="p-3">티셔츠 사이즈</th>
                       <th className="p-3 text-center">권한 및 가입 제어</th>
@@ -1861,7 +1815,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     {approvedManagers.length > 0 ? (
                       approvedManagers.map(m => (
                         <tr key={m.id} className="hover:bg-slate-50/50 group">
-                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                          <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[90px]">
                             {(m.is_admin ?? (m.church_id === '')) ? '지방회 관리자' : m.name}
                           </td>
                           <td className="p-3">
