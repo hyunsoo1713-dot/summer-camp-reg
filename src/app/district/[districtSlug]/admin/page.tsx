@@ -1734,7 +1734,53 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 )}
               </h3>
               
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              {/* 1-1. 모바일 화면 (카드 레이아웃) */}
+              <div className="block sm:hidden flex flex-col gap-3">
+                {pendingManagers.length > 0 ? (
+                  pendingManagers.map(m => (
+                    <div key={m.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">{m.name}</h4>
+                          <span className="text-[10px] font-bold text-indigo-600">
+                            {m.church_id === 'temp_new_church' ? '신규등록요청' : (churches.find(c => c.id === m.church_id)?.name || '-')}
+                          </span>
+                        </div>
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">
+                          {m.shirt_size || '-'}
+                        </span>
+                      </div>
+                      
+                      <div className="text-[11px] text-slate-500 flex flex-col gap-1 mt-1 border-t border-slate-200/60 pt-2">
+                        <div><span className="font-semibold text-slate-700">연락처:</span> {m.phone}</div>
+                        {m.memo && <div><span className="font-semibold text-slate-700">신청 메모:</span> {m.memo}</div>}
+                      </div>
+                      
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-slate-200/60">
+                        <button
+                          onClick={() => handleApproveManager(m)}
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs transition-all-custom"
+                        >
+                          승인
+                        </button>
+                        <button
+                          onClick={() => handleRejectManager(m.id)}
+                          className="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-2 rounded-lg text-xs border border-rose-200 transition-all-custom"
+                        >
+                          반려
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
+                    승인 대기 중인 신청이 없습니다.
+                  </div>
+                )}
+              </div>
+
+              {/* 1-2. 데스크톱 화면 (테이블 레이아웃) */}
+              <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
