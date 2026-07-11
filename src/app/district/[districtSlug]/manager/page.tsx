@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
+import { formatPhone } from '@/utils/format';
 import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, District } from '@/types';
 import { 
   Users, CreditCard, Copy, Info, CheckCircle, Search, 
@@ -934,7 +935,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                     <input
                       type="tel"
                       value={pGuardianPhone}
-                      onChange={e => setPGuardianPhone(e.target.value)}
+                      onChange={e => setPGuardianPhone(formatPhone(e.target.value))}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
                     />
                   </div>
@@ -949,7 +950,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                     <input
                       type="tel"
                       value={pPersonalPhone}
-                      onChange={e => setPPersonalPhone(e.target.value)}
+                      onChange={e => setPPersonalPhone(formatPhone(e.target.value))}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
                     />
                   </div>
