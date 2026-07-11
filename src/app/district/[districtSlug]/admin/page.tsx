@@ -1907,17 +1907,38 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   {churches.map(c => (
                     <div key={c.id} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
                       <span className="font-semibold text-slate-800">{c.name}</span>
-                      <button
-                        onClick={() => {
-                          if (confirm('이 교회를 삭제하시겠습니까? 등록된 해당 교회 참가자 및 조원 정보가 모두 삭제될 수 있습니다.')) {
-                            db.deleteChurch(c.id);
-                            loadAllData(district.id, event?.id || '');
-                          }
-                        }}
-                        className="text-rose-500 hover:text-rose-700"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={async () => {
+                            const newName = await showPrompt('교회명 수정', '새로운 교회명을 입력하세요', c.name);
+                            if (newName && newName.trim() && newName.trim() !== c.name) {
+                              try {
+                                db.updateChurch(c.id, { name: newName.trim() });
+                                loadAllData(district.id, event?.id || '');
+                                alert('교회명이 수정되었습니다.');
+                              } catch (err: any) {
+                                alert(err.message);
+                              }
+                            }
+                          }}
+                          className="text-indigo-600 hover:text-indigo-800 p-1 transition-all-custom"
+                          title="교회명 수정"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('이 교회를 삭제하시겠습니까? 등록된 해당 교회 참가자 및 조원 정보가 모두 삭제될 수 있습니다.')) {
+                              db.deleteChurch(c.id);
+                              loadAllData(district.id, event?.id || '');
+                            }
+                          }}
+                          className="text-rose-500 hover:text-rose-700 p-1 transition-all-custom"
+                          title="교회 삭제"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
