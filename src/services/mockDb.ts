@@ -767,7 +767,7 @@ export const mockDb = {
     const list = this.getData<ChurchPaymentStatus>('evt_payment_statuses');
     return districtId ? list.filter(s => s.district_id === districtId) : list;
   },
-  updateChurchPaymentStatus(churchId: string, status: '미납' | '확인 필요' | '납부완료', memo?: string, districtId?: string) {
+  updateChurchPaymentStatus(churchId: string, status: '미납' | '확인 필요' | '납부완료', memo?: string, districtId?: string, paidAmount?: number) {
     const statuses = this.getData<ChurchPaymentStatus>('evt_payment_statuses');
     const index = statuses.findIndex(s => s.church_id === churchId);
     const now = new Date().toISOString();
@@ -775,17 +775,24 @@ export const mockDb = {
     if (index !== -1) {
       statuses[index].status = status;
       if (memo !== undefined) statuses[index].memo = memo;
+      if (paidAmount !== undefined) {
+        statuses[index].paid_amount = paidAmount;
+      } else if (status === '납부완료') {
+        statuses[index].paid_amount = statuses[index].total_amount;
+      }
       if (status === '납부완료') {
         statuses[index].confirmed_at = now;
       }
       statuses[index].updated_at = now;
     } else {
+      const initPaidAmount = paidAmount !== undefined ? paidAmount : 0;
       statuses.push({
         id: `cps-${uuid()}`,
         district_id: districtId || 'dist-1',
         event_id: 'evt-2026',
         church_id: churchId,
         total_amount: 0,
+        paid_amount: status === '납부완료' ? 0 : initPaidAmount,
         status,
         memo,
         confirmed_at: status === '납부완료' ? now : undefined,
@@ -793,6 +800,7 @@ export const mockDb = {
       });
     }
     this.setData('evt_payment_statuses', statuses);
+    this.recalculatePayment(churchId);
   },
 
   // --- Recalculate Total Payment ---
@@ -826,7 +834,16 @@ export const mockDb = {
     const statuses = this.getData<ChurchPaymentStatus>('evt_payment_statuses');
     const index = statuses.findIndex(s => s.church_id === churchId);
     if (index !== -1) {
+      const oldStatus = statuses[index].status;
+      const oldPaidAmount = statuses[index].paid_amount || 0;
+      
       statuses[index].total_amount = total;
+      
+      // 납부완료 상태에서 추가 등록자가 생겨 총액이 실 납부액보다 커진 경우
+      if (oldStatus === '납부완료' && total > oldPaidAmount) {
+        statuses[index].status = '확인 필요';
+      }
+      
       statuses[index].updated_at = new Date().toISOString();
       this.setData('evt_payment_statuses', statuses);
     }

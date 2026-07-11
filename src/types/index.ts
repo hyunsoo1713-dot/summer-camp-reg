@@ -162,6 +162,7 @@ export interface ChurchPaymentStatus {
   event_id: string;
   church_id: string;
   total_amount: number;
+  paid_amount?: number; // 납부 완료 시점의 실 납부 금액
   status: '미납' | '확인 필요' | '납부완료';
   memo?: string;
   confirmed_at?: string;

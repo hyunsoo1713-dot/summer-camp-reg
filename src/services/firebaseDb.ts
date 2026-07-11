@@ -796,7 +796,7 @@ export const firebaseDb = {
   getChurchPaymentStatuses(districtId?: string): ChurchPaymentStatus[] {
     return districtId ? memoryDb.paymentStatuses.filter(s => s.district_id === districtId) : memoryDb.paymentStatuses;
   },
-  updateChurchPaymentStatus(churchId: string, status: '미납' | '확인 필요' | '납부완료', memo?: string, districtId?: string) {
+  updateChurchPaymentStatus(churchId: string, status: '미납' | '확인 필요' | '납부완료', memo?: string, districtId?: string, paidAmount?: number) {
     const idx = memoryDb.paymentStatuses.findIndex(s => s.church_id === churchId);
     const now = new Date().toISOString();
     
@@ -804,18 +804,25 @@ export const firebaseDb = {
     if (idx !== -1) {
       memoryDb.paymentStatuses[idx].status = status;
       if (memo !== undefined) memoryDb.paymentStatuses[idx].memo = memo;
+      if (paidAmount !== undefined) {
+        memoryDb.paymentStatuses[idx].paid_amount = paidAmount;
+      } else if (status === '납부완료') {
+        memoryDb.paymentStatuses[idx].paid_amount = memoryDb.paymentStatuses[idx].total_amount;
+      }
       if (status === '납부완료') {
         memoryDb.paymentStatuses[idx].confirmed_at = now;
       }
       memoryDb.paymentStatuses[idx].updated_at = now;
       target = memoryDb.paymentStatuses[idx];
     } else {
+      const initPaidAmount = paidAmount !== undefined ? paidAmount : 0;
       target = {
         id: `cps-${uuid()}`,
         district_id: districtId || 'dist-1',
         event_id: 'evt-2026',
         church_id: churchId,
         total_amount: 0,
+        paid_amount: status === '납부완료' ? 0 : initPaidAmount,
         status,
         memo,
         confirmed_at: status === '납부완료' ? now : undefined,
@@ -824,6 +831,7 @@ export const firebaseDb = {
       memoryDb.paymentStatuses.push(target);
     }
     setDoc(doc(dbFirestore, 'church_payment_statuses', target.id), target).catch(err => console.error(err));
+    this.recalculatePayment(churchId);
   },
 
   // --- Recalculate Total Payment ---
@@ -855,7 +863,16 @@ export const firebaseDb = {
 
     const idx = memoryDb.paymentStatuses.findIndex(s => s.church_id === churchId);
     if (idx !== -1) {
+      const oldStatus = memoryDb.paymentStatuses[idx].status;
+      const oldPaidAmount = memoryDb.paymentStatuses[idx].paid_amount || 0;
+      
       memoryDb.paymentStatuses[idx].total_amount = total;
+      
+      // 납부완료 상태에서 추가 등록자가 생겨 총액이 실 납부액보다 커진 경우
+      if (oldStatus === '납부완료' && total > oldPaidAmount) {
+        memoryDb.paymentStatuses[idx].status = '확인 필요';
+      }
+      
       memoryDb.paymentStatuses[idx].updated_at = new Date().toISOString();
       setDoc(doc(dbFirestore, 'church_payment_statuses', memoryDb.paymentStatuses[idx].id), memoryDb.paymentStatuses[idx]).catch(err => console.error(err));
     }

@@ -70,6 +70,7 @@ export default function AdminDashboard() {
 
   // 탭 제어
   const [activeTab, setActiveTab] = useState<'settings' | 'churches' | 'participants' | 'grouping'>('settings');
+  const [tempPaidAmounts, setTempPaidAmounts] = useState<Record<string, string>>({});
 
   const loadAllData = (eventId: string) => {
     setChurches(db.getChurches());
@@ -254,10 +255,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdatePaymentStatus = (churchId: string, status: '미납' | '확인 필요' | '납부완료', memo: string) => {
-    db.updateChurchPaymentStatus(churchId, status, memo);
+  const handleUpdatePaymentStatus = (churchId: string, status: '미납' | '확인 필요' | '납부완료', memo: string, paidAmount?: number) => {
+    db.updateChurchPaymentStatus(churchId, status, memo, undefined, paidAmount);
     loadAllData(event!.id);
-    alert('납부 상태가 변경되었습니다.');
+    if (paidAmount === undefined) {
+      alert('납부 상태가 변경되었습니다.');
+    }
   };
 
   // 교회별 참가비 예외
@@ -1066,6 +1069,7 @@ export default function AdminDashboard() {
                         <th className="p-3">정산 금액</th>
                         <th className="p-3">납부 상태</th>
                         <th className="p-3">상태 변경</th>
+                        <th className="p-3">실 납부 금액</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1105,6 +1109,41 @@ export default function AdminDashboard() {
                                   </button>
                                 ))}
                               </div>
+                            </td>
+                            <td className="p-3 flex items-center">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={
+                                  tempPaidAmounts[church.id] !== undefined
+                                    ? tempPaidAmounts[church.id]
+                                    : (statusRecord?.paid_amount ?? 0).toString()
+                                }
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^0-9]/g, '');
+                                  setTempPaidAmounts(prev => ({ ...prev, [church.id]: val }));
+                                }}
+                                onBlur={() => {
+                                  const rawVal = tempPaidAmounts[church.id];
+                                  if (rawVal !== undefined) {
+                                    const val = parseInt(rawVal, 10) || 0;
+                                    handleUpdatePaymentStatus(church.id, statusRecord?.status || '미납', statusRecord?.memo || '', val);
+                                    setTempPaidAmounts(prev => {
+                                      const copy = { ...prev };
+                                      delete copy[church.id];
+                                      return copy;
+                                    });
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                                className="w-24 px-2 py-1 text-xs border border-slate-200 rounded text-right focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                              />
+                              <span className="ml-1 text-slate-500 font-semibold">원</span>
                             </td>
                           </tr>
                         );
