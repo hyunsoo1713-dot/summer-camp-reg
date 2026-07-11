@@ -15,7 +15,8 @@ import {
 import { 
   Settings, Users, ShieldCheck, UserCheck, Download, Grid, Plus, Trash2, 
   Save, AlertTriangle, CheckCircle, ClipboardList, Info, FileSpreadsheet,
-  ArrowRight, ShieldAlert, Edit, LogOut, Copy
+  ArrowRight, ShieldAlert, Edit, LogOut, Copy,
+  ArrowUpDown, ChevronUp, ChevronDown
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -721,6 +722,28 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const [adminSearch, setAdminSearch] = useState('');
   const [adminFilterChurch, setAdminFilterChurch] = useState('');
   const [adminFilterType, setAdminFilterType] = useState('');
+
+  // 정렬 상태 및 핸들러
+  const [sortField, setSortField] = useState<'name' | 'church' | 'type' | 'gender' | 'shirt_size' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: 'name' | 'church' | 'type' | 'gender' | 'shirt_size') => {
+    if (sortField === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const renderSortIcon = (field: 'name' | 'church' | 'type' | 'gender' | 'shirt_size') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-40" />;
+    }
+    return sortOrder === 'asc' 
+      ? <ChevronUp className="w-3.5 h-3.5 text-indigo-600 font-bold" />
+      : <ChevronDown className="w-3.5 h-3.5 text-indigo-600 font-bold" />;
+  };
   
   // 엑셀 열 선택 체크박스
   const [selectedExcelCols, setSelectedExcelCols] = useState<string[]>([
@@ -771,6 +794,36 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     const matchesType = adminFilterType ? p.participant_type === adminFilterType : true;
 
     return matchesSearch && matchesChurch && matchesType;
+  });
+
+  const sortedParticipants = [...filteredParticipants].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let valA = '';
+    let valB = '';
+
+    if (sortField === 'name') {
+      valA = a.name || '';
+      valB = b.name || '';
+    } else if (sortField === 'church') {
+      const chA = churches.find(c => c.id === a.church_id)?.name || '';
+      const chB = churches.find(c => c.id === b.church_id)?.name || '';
+      valA = chA;
+      valB = chB;
+    } else if (sortField === 'type') {
+      valA = `${a.participant_type || ''}_${a.department || ''}`;
+      valB = `${b.participant_type || ''}_${b.department || ''}`;
+    } else if (sortField === 'gender') {
+      valA = a.gender || '';
+      valB = b.gender || '';
+    } else if (sortField === 'shirt_size') {
+      valA = a.shirt_size || '';
+      valB = b.shirt_size || '';
+    }
+
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // 엑셀 프리셋 다운로드 실행기
@@ -2231,17 +2284,58 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                    <th className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">참가자명</th>
-                    <th className="p-3">소속 교회</th>
-                    <th className="p-3">구분 / 부서</th>
-                    <th className="p-3">성별 / 셔츠</th>
+                    <th 
+                      onClick={() => handleSort('name')} 
+                      className="p-3 sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        참가자명
+                        {renderSortIcon('name')}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('church')} 
+                      className="p-3 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        소속 교회
+                        {renderSortIcon('church')}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('type')} 
+                      className="p-3 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        구분 / 부서
+                        {renderSortIcon('type')}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('gender')} 
+                      className="p-3 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        성별
+                        {renderSortIcon('gender')}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('shirt_size')} 
+                      className="p-3 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        셔츠
+                        {renderSortIcon('shirt_size')}
+                      </div>
+                    </th>
                     <th className="p-3">연락처 / 보호자</th>
                     <th className="p-3">동작</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredParticipants.length > 0 ? (
-                    filteredParticipants.map(p => {
+                  {sortedParticipants.length > 0 ? (
+                    sortedParticipants.map(p => {
                       const ch = churches.find(c => c.id === p.church_id);
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/50 group">
@@ -2255,7 +2349,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             </span>
                             {p.department || '-'}
                           </td>
-                          <td className="p-3">{p.gender} / {p.shirt_size}</td>
+                          <td className="p-3">{p.gender}</td>
+                          <td className="p-3">{p.shirt_size}</td>
                           <td className="p-3">
                             {p.participant_type === '학생' ? `${p.guardian_name} (${p.guardian_phone})` : p.personal_phone}
                           </td>
@@ -2281,7 +2376,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="p-4 text-center text-slate-400">데이터가 없습니다.</td>
+                      <td colSpan={7} className="p-4 text-center text-slate-400">데이터가 없습니다.</td>
                     </tr>
                   )}
                 </tbody>
