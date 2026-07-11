@@ -625,7 +625,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         <td className="p-3">
                           {p.participant_type === '학생' ? (
                             <div>
-                              <p className="font-semibold text-[10px] text-slate-500">부: {p.guardian_name}</p>
+                              <p className="font-semibold text-[10px] text-slate-500">{p.guardian_name}</p>
                               <p className="text-[11px] font-medium">{p.guardian_phone}</p>
                             </div>
                           ) : (
