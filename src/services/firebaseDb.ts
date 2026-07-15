@@ -693,10 +693,14 @@ export const firebaseDb = {
   updateParticipant(id: string, updates: Partial<Participant>): Participant {
     const idx = memoryDb.participants.findIndex(p => p.id === id);
     if (idx === -1) throw new Error('참가자를 찾을 수 없습니다.');
+    const oldChurchId = memoryDb.participants[idx].church_id;
     const updated = { ...memoryDb.participants[idx], ...updates, updated_at: new Date().toISOString() };
     memoryDb.participants[idx] = updated;
     setDoc(doc(dbFirestore, 'participants', id), updated).catch(err => console.error(err));
     this.recalculatePayment(updated.church_id);
+    if (oldChurchId && oldChurchId !== updated.church_id) {
+      this.recalculatePayment(oldChurchId);
+    }
     return updated;
   },
   deleteParticipant(id: string): void {

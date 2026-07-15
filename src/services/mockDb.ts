@@ -653,10 +653,14 @@ export const mockDb = {
     const participants = this.getData<Participant>('evt_participants');
     const index = participants.findIndex(p => p.id === id);
     if (index === -1) throw new Error('참가자를 찾을 수 없습니다.');
+    const oldChurchId = participants[index].church_id;
     const updated = { ...participants[index], ...updates, updated_at: new Date().toISOString() };
     participants[index] = updated;
     this.setData('evt_participants', participants);
     this.recalculatePayment(updated.church_id);
+    if (oldChurchId && oldChurchId !== updated.church_id) {
+      this.recalculatePayment(oldChurchId);
+    }
     return updated;
   },
   deleteParticipant(id: string): void {

@@ -126,7 +126,8 @@ export const excelUtils = {
       return {
         '교회명': church.name,
         '총 등록 인원': churchParticipants.length,
-        '총 납부 금액': statusRecord?.total_amount || 0,
+        '정산 금액': statusRecord?.total_amount || 0,
+        '실 납부 금액': statusRecord?.paid_amount || 0,
         '납부 상태': statusRecord?.status || '미납',
         '확인 일시': statusRecord?.confirmed_at ? new Date(statusRecord.confirmed_at).toLocaleString() : '-',
         '메모': statusRecord?.memo || '-'
