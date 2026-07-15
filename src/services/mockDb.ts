@@ -662,8 +662,12 @@ export const mockDb = {
     const updated = { ...participants[index], ...updates, updated_at: new Date().toISOString() };
     participants[index] = updated;
     this.setData('evt_participants', participants);
+    
+    console.log(`[mockDb:updateParticipant] Participant: ${id}, oldChurchId: ${oldChurchId}, newChurchId: ${updated.church_id}`);
+
     this.recalculatePayment(updated.church_id);
     if (oldChurchId && oldChurchId !== updated.church_id) {
+      console.log(`[mockDb:updateParticipant] Church ID changed! Recalculating old church payment: ${oldChurchId}`);
       this.recalculatePayment(oldChurchId);
     }
     return updated;
@@ -842,9 +846,11 @@ export const mockDb = {
 
     const statuses = this.getData<ChurchPaymentStatus>('evt_payment_statuses');
     const index = statuses.findIndex(s => s.church_id === churchId);
+    console.log(`[mockDb:recalculatePayment] churchId: ${churchId}, total: ${total}, foundIndex: ${index}`);
     if (index !== -1) {
       const oldStatus = statuses[index].status;
       const oldPaidAmount = statuses[index].paid_amount || 0;
+      const oldTotal = statuses[index].total_amount;
       
       statuses[index].total_amount = total;
       
@@ -855,6 +861,22 @@ export const mockDb = {
       
       statuses[index].updated_at = new Date().toISOString();
       this.setData('evt_payment_statuses', statuses);
+      console.log(`[mockDb:recalculatePayment] Updated payment status record for church: ${churchId}. Total: ${oldTotal} -> ${total}`);
+    } else {
+      // 만약 정산 레코드가 없으면 새로 생성해서 로컬 스토리지에 넣어준다!
+      const newCpsId = `cps-${uuid()}`;
+      const newCps: ChurchPaymentStatus = {
+        id: newCpsId,
+        district_id: church?.district_id || 'dist-1',
+        event_id: eventId,
+        church_id: churchId,
+        total_amount: total,
+        status: '미납',
+        updated_at: new Date().toISOString()
+      };
+      statuses.push(newCps);
+      this.setData('evt_payment_statuses', statuses);
+      console.log(`[mockDb:recalculatePayment] Created new payment status record for church: ${churchId}. Total: ${total}`);
     }
   },
 

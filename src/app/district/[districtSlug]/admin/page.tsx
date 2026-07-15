@@ -16,7 +16,7 @@ import {
   Settings, Users, ShieldCheck, UserCheck, Download, Grid, Plus, Trash2, 
   Save, AlertTriangle, CheckCircle, ClipboardList, Info, FileSpreadsheet,
   ArrowRight, ShieldAlert, Edit, LogOut, Copy,
-  ArrowUpDown, ChevronUp, ChevronDown
+  ArrowUpDown, ChevronUp, ChevronDown, RefreshCw
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -126,6 +126,25 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     attendanceDates: { date: string; label: string }[];
     fees: Record<string, number>;
   }>({ departments: [], birthYears: [], shirtSizes: [], attendanceDates: [], fees: {} });
+
+  // 새로고침 상태 및 핸들러
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      if (db.initForce) {
+        await db.initForce();
+      }
+      if (district) {
+        loadAllData(district.id, event?.id || '');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // 탭 제어
   const [activeTab, setActiveTab] = useState<'settings' | 'churches' | 'participants' | 'grouping'>('settings');
@@ -1028,6 +1047,15 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1 bg-indigo-900/50 hover:bg-indigo-900 border border-indigo-800 px-3 py-1.5 rounded-lg text-xs text-indigo-200 hover:text-white font-semibold transition-colors disabled:opacity-50"
+            title="최신 데이터를 다시 불러옵니다"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? '불러오는 중...' : '새로고침'}
+          </button>
           <span className="text-xs text-indigo-200 font-semibold bg-indigo-900/60 px-3 py-1.5 rounded-lg border border-indigo-800">
             총 {totalRegs}명 등록 접수됨
           </span>

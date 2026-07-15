@@ -8,7 +8,7 @@ import { formatPhone } from '@/utils/format';
 import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, District } from '@/types';
 import { 
   Users, CreditCard, Copy, Info, CheckCircle, Search, 
-  UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt
+  UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt, RefreshCw
 } from 'lucide-react';
 
 interface PageProps {
@@ -30,6 +30,25 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [requests, setRequests] = useState<SameGroupRequest[]>([]);
   
+  // 새로고침 상태 및 핸들러
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      if (db.initForce) {
+        await db.initForce();
+      }
+      if (district && session && event) {
+        loadData(district.id, session.churchId, event.id);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // UI 탭
   const [activeTab, setActiveTab] = useState<'dashboard' | 'participants' | 'requests'>('dashboard');
 
@@ -373,6 +392,15 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white font-semibold transition-colors disabled:opacity-50"
+            title="최신 데이터를 다시 불러옵니다"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? '불러오는 중...' : '새로고침'}
+          </button>
           <span className="text-xs text-slate-300 font-medium bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
             접속자: {session.name}
           </span>

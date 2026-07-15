@@ -697,8 +697,12 @@ export const firebaseDb = {
     const updated = { ...memoryDb.participants[idx], ...updates, updated_at: new Date().toISOString() };
     memoryDb.participants[idx] = updated;
     setDoc(doc(dbFirestore, 'participants', id), updated).catch(err => console.error(err));
+    
+    console.log(`[firebaseDb:updateParticipant] Participant: ${id}, oldChurchId: ${oldChurchId}, newChurchId: ${updated.church_id}`);
+
     this.recalculatePayment(updated.church_id);
     if (oldChurchId && oldChurchId !== updated.church_id) {
+      console.log(`[firebaseDb:updateParticipant] Church ID changed! Recalculating old church payment: ${oldChurchId}`);
       this.recalculatePayment(oldChurchId);
     }
     return updated;
@@ -865,10 +869,12 @@ export const firebaseDb = {
     const teacherFee = teacherFeeOverride ? teacherFeeOverride.fee : (baseFees['교사'] || 0);
     total += approvedManagersCount * teacherFee;
 
-    const idx = memoryDb.paymentStatuses.findIndex(s => s.church_id === churchId);
+    let idx = memoryDb.paymentStatuses.findIndex(s => s.church_id === churchId);
+    console.log(`[firebaseDb:recalculatePayment] churchId: ${churchId}, total: ${total}, foundIndex: ${idx}`);
     if (idx !== -1) {
       const oldStatus = memoryDb.paymentStatuses[idx].status;
       const oldPaidAmount = memoryDb.paymentStatuses[idx].paid_amount || 0;
+      const oldTotal = memoryDb.paymentStatuses[idx].total_amount;
       
       memoryDb.paymentStatuses[idx].total_amount = total;
       
@@ -879,6 +885,22 @@ export const firebaseDb = {
       
       memoryDb.paymentStatuses[idx].updated_at = new Date().toISOString();
       setDoc(doc(dbFirestore, 'church_payment_statuses', memoryDb.paymentStatuses[idx].id), memoryDb.paymentStatuses[idx]).catch(err => console.error(err));
+      console.log(`[firebaseDb:recalculatePayment] Updated payment status record for church: ${churchId}. Total: ${oldTotal} -> ${total}`);
+    } else {
+      // 만약 정산 레코드가 없으면 새로 생성해서 Firestore와 memoryDb에 넣어준다!
+      const newCpsId = `cps-${uuid()}`;
+      const newCps: ChurchPaymentStatus = {
+        id: newCpsId,
+        district_id: church?.district_id || 'dist-1',
+        event_id: eventId,
+        church_id: churchId,
+        total_amount: total,
+        status: '미납',
+        updated_at: new Date().toISOString()
+      };
+      memoryDb.paymentStatuses.push(newCps);
+      setDoc(doc(dbFirestore, 'church_payment_statuses', newCpsId), newCps).catch(err => console.error(err));
+      console.log(`[firebaseDb:recalculatePayment] Created new payment status record for church: ${churchId}. Total: ${total}`);
     }
   },
 
