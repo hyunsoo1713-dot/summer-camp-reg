@@ -80,50 +80,58 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
   const [reqError, setReqError] = useState('');
 
   useEffect(() => {
-    // 1. 지방회 검증
-    const dist = db.getDistrictBySlug(districtSlug);
-    if (!dist || dist.status !== 'approved') {
-      alert('유효하지 않거나 승인 대기 중인 지방회 주소입니다.');
-      router.push('/');
-      return;
-    }
-    setDistrict(dist);
+    const initAndLoad = async () => {
+      if (db.initForce) {
+        await db.initForce();
+      }
 
-    // 2. 인증 검증
-    const sessStr = localStorage.getItem('evt_session');
-    if (!sessStr) {
-      router.push(`/district/${districtSlug}/login`);
-      return;
-    }
-    const sess = JSON.parse(sessStr);
-    if (sess.role !== 'manager' || !sess.churchId || sess.districtSlug !== districtSlug) {
-      router.push(`/district/${districtSlug}/login`);
-      return;
-    }
-    setSession(sess);
+      // 1. 지방회 검증
+      const dist = db.getDistrictBySlug(districtSlug);
+      if (!dist || dist.status !== 'approved') {
+        alert('유효하지 않거나 승인 대기 중인 지방회 주소입니다.');
+        router.push('/');
+        return;
+      }
+      setDistrict(dist);
 
-    // 3. 행사 정보
-    const active = db.getActiveEvent(dist.id);
-    if (!active) {
-      alert('해당 지방회에 활성화된 행사가 없습니다.');
-      router.push(`/district/${districtSlug}`);
-      return;
-    }
-    setEvent(active);
+      // 2. 인증 검증
+      const sessStr = localStorage.getItem('evt_session');
+      if (!sessStr) {
+        router.push(`/district/${districtSlug}/login`);
+        return;
+      }
+      const sess = JSON.parse(sessStr);
+      if (sess.role !== 'manager' || !sess.churchId || sess.districtSlug !== districtSlug) {
+        router.push(`/district/${districtSlug}/login`);
+        return;
+      }
+      setSession(sess);
 
-    const ch = db.getChurches(dist.id).find((c: Church) => c.id === sess.churchId) || null;
-    if (!ch) {
-      alert('해당 지방회에 소속된 교회를 찾을 수 없습니다.');
-      router.push(`/district/${districtSlug}`);
-      return;
-    }
-    setChurch(ch);
+      // 3. 행사 정보
+      const active = db.getActiveEvent(dist.id);
+      if (!active) {
+        alert('해당 지방회에 활성화된 행사가 없습니다.');
+        router.push(`/district/${districtSlug}`);
+        return;
+      }
+      setEvent(active);
 
-    const opts = db.getEventOptions(active.id);
-    setOptions(opts);
+      const ch = db.getChurches(dist.id).find((c: Church) => c.id === sess.churchId) || null;
+      if (!ch) {
+        alert('해당 지방회에 소속된 교회를 찾을 수 없습니다.');
+        router.push(`/district/${districtSlug}`);
+        return;
+      }
+      setChurch(ch);
 
-    // 4. 데이터 로딩
-    loadData(dist.id, sess.churchId, active.id);
+      const opts = db.getEventOptions(active.id);
+      setOptions(opts);
+
+      // 4. 데이터 로딩
+      loadData(dist.id, sess.churchId, active.id);
+    };
+
+    initAndLoad();
   }, [districtSlug, router]);
 
   const loadData = (districtId: string, churchId: string, eventId: string) => {

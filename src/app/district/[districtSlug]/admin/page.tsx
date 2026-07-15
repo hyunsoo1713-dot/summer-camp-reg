@@ -208,41 +208,49 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
   // 인증 및 로딩
   useEffect(() => {
-    // 1. 지방회 검증
-    const dist = db.getDistrictBySlug(districtSlug);
-    if (!dist || dist.status !== 'approved') {
-      alert('유효하지 않거나 승인 대기 중인 지방회 주소입니다.');
-      router.push('/');
-      return;
-    }
-    setDistrict(dist);
+    const initAndLoad = async () => {
+      if (db.initForce) {
+        await db.initForce();
+      }
 
-    // 2. 세션 검증
-    const sessStr = localStorage.getItem('evt_session');
-    if (!sessStr) {
-      router.push(`/district/${districtSlug}/login`);
-      return;
-    }
-    try {
-      const session = JSON.parse(sessStr);
-      const sessionDistId = session.district_id || session.districtId;
-      if (!session.is_admin || sessionDistId !== dist.id) {
+      // 1. 지방회 검증
+      const dist = db.getDistrictBySlug(districtSlug);
+      if (!dist || dist.status !== 'approved') {
+        alert('유효하지 않거나 승인 대기 중인 지방회 주소입니다.');
+        router.push('/');
+        return;
+      }
+      setDistrict(dist);
+
+      // 2. 세션 검증
+      const sessStr = localStorage.getItem('evt_session');
+      if (!sessStr) {
         router.push(`/district/${districtSlug}/login`);
         return;
       }
-    } catch (e) {
-      router.push(`/district/${districtSlug}/login`);
-      return;
-    }
+      try {
+        const session = JSON.parse(sessStr);
+        const sessionDistId = session.district_id || session.districtId;
+        if (!session.is_admin || sessionDistId !== dist.id) {
+          router.push(`/district/${districtSlug}/login`);
+          return;
+        }
+      } catch (e) {
+        router.push(`/district/${districtSlug}/login`);
+        return;
+      }
 
-    const active = db.getActiveEvent(dist.id);
-    if (active) {
-      setEvent(active);
-      loadAllData(dist.id, active.id);
-    } else {
-      // 만약 액티브 이벤트가 없으면 강제로 빈 리스트 형태로 바인딩
-      loadAllData(dist.id, '');
-    }
+      const active = db.getActiveEvent(dist.id);
+      if (active) {
+        setEvent(active);
+        loadAllData(dist.id, active.id);
+      } else {
+        // 만약 액티브 이벤트가 없으면 강제로 빈 리스트 형태로 바인딩
+        loadAllData(dist.id, '');
+      }
+    };
+
+    initAndLoad();
   }, [districtSlug, router]);
 
   const loadAllData = (districtId: string, eventId: string) => {

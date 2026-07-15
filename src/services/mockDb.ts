@@ -409,6 +409,11 @@ export const mockDb = {
     if (idx === -1) throw new Error('지방회를 찾을 수 없습니다.');
     list[idx].status = 'rejected';
     this.setData('evt_districts', list);
+
+    // 지방회 반려 시, 해당 지방회 소속의 모든 매니저 계정 삭제
+    const managers = this.getManagers().filter(m => m.district_id !== id);
+    this.setData('evt_managers', managers);
+
     return list[idx];
   },
 

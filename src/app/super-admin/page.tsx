@@ -60,12 +60,20 @@ export default function SuperAdminDashboard() {
       }
     }
 
-    // 세션 확인
-    const superSess = localStorage.getItem('super_session');
-    if (superSess === 'active') {
-      setIsAuthenticated(true);
-      loadDistricts();
-    }
+    const initAndLoad = async () => {
+      if (db.initForce) {
+        await db.initForce();
+      }
+
+      // 세션 확인
+      const superSess = localStorage.getItem('super_session');
+      if (superSess === 'active') {
+        setIsAuthenticated(true);
+        loadDistricts();
+      }
+    };
+
+    initAndLoad();
   }, []);
 
   const loadDistricts = () => {

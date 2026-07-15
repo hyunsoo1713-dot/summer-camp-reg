@@ -430,9 +430,9 @@ export const firebaseDb = {
     memoryDb.districts[idx].status = 'rejected';
     setDoc(doc(dbFirestore, 'districts', id), memoryDb.districts[idx]).catch(err => console.error(err));
 
-    // 지방회 반려 시, 해당 지방회 소속의 승인 대기 중이었던 매니저 계정도 함께 삭제 처리합니다.
+    // 지방회 반려 시, 해당 지방회 소속의 모든 매니저 계정도 함께 삭제 처리합니다.
     memoryDb.managers = memoryDb.managers.filter(m => {
-      if (m.district_id === id && m.status === 'pending') {
+      if (m.district_id === id) {
         deleteDoc(doc(dbFirestore, 'church_managers', m.id)).catch(err => console.error(err));
         return false;
       }

@@ -62,33 +62,41 @@ export default function EditPage({ params }: PageProps) {
   const [isEditDeadlinePassed, setIsEditDeadlinePassed] = useState<boolean>(false);
 
   useEffect(() => {
-    const dist = db.getDistrictBySlug(districtSlug);
-    if (!dist || dist.status !== 'approved') {
-      alert('유효하지 않은 지방회입니다.');
-      router.push('/');
-      return;
-    }
-    setDistrict(dist);
+    const initAndLoad = async () => {
+      if (db.initForce) {
+        await db.initForce();
+      }
 
-    const active = db.getActiveEvent(dist.id);
-    if (!active) {
-      alert('진행 중인 성경학교 행사가 없습니다.');
-      router.push(`/district/${districtSlug}`);
-      return;
-    }
-    setEvent(active);
-    
-    // 해당 지방회 전용 교회 및 옵션 로드
-    setChurches(db.getChurches(dist.id));
-    setOptions(db.getEventOptions(active.id));
+      const dist = db.getDistrictBySlug(districtSlug);
+      if (!dist || dist.status !== 'approved') {
+        alert('유효하지 않은 지방회입니다.');
+        router.push('/');
+        return;
+      }
+      setDistrict(dist);
 
-    // 수정 마감일 확인
-    const now = new Date();
-    const deadline = new Date(active.edit_deadline);
-    if (now > deadline) {
-      setIsEditDeadlinePassed(true);
-    }
-    setLoading(false);
+      const active = db.getActiveEvent(dist.id);
+      if (!active) {
+        alert('진행 중인 성경학교 행사가 없습니다.');
+        router.push(`/district/${districtSlug}`);
+        return;
+      }
+      setEvent(active);
+      
+      // 해당 지방회 전용 교회 및 옵션 로드
+      setChurches(db.getChurches(dist.id));
+      setOptions(db.getEventOptions(active.id));
+
+      // 수정 마감일 확인
+      const now = new Date();
+      const deadline = new Date(active.edit_deadline);
+      if (now > deadline) {
+        setIsEditDeadlinePassed(true);
+      }
+      setLoading(false);
+    };
+
+    initAndLoad();
   }, [districtSlug, router]);
 
   // 비밀번호 인증을 위한 간단 해시 비교 함수
