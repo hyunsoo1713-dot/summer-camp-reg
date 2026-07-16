@@ -129,6 +129,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
   // 새로고침 상태 및 핸들러
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const handleRefresh = async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -726,6 +727,33 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     loadAllData(district.id, event?.id || '');
     if (paidAmount === undefined) {
       alert('납부 상태가 변경되었습니다.');
+    }
+  };
+
+  // 전체 교회 정산 일괄 재계산
+  const handleRecalculateAll = async () => {
+    if (!district || isRecalculating) return;
+    const confirmed = await showConfirm(
+      '전체 재정산',
+      '모든 교회의 정산 금액을 참가자 수 기준으로 다시 계산합니다.\n계속하시겠습니까?'
+    );
+    if (!confirmed) return;
+
+    setIsRecalculating(true);
+    try {
+      for (const church of churches) {
+        db.recalculatePayment(church.id);
+      }
+      if (db.initForce) {
+        await db.initForce();
+      }
+      loadAllData(district.id, event?.id || '');
+      alert('전체 교회 정산 금액이 재계산되었습니다.');
+    } catch (err) {
+      console.error('전체 재정산 오류:', err);
+      alert('재정산 중 오류가 발생했습니다.');
+    } finally {
+      setIsRecalculating(false);
     }
   };
 
@@ -2035,7 +2063,17 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
               {/* 교회별 참가비 정산 및 납부 상태 변경 */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 lg:col-span-2 flex flex-col gap-4">
-                <h3 className="font-bold text-slate-800 text-sm">교회별 정산 및 납부 관리</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-800 text-sm">교회별 정산 및 납부 관리</h3>
+                  <button
+                    onClick={handleRecalculateAll}
+                    disabled={isRecalculating}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all-custom disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
+                    {isRecalculating ? '재계산 중...' : '전체 재정산'}
+                  </button>
+                </div>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
                     <thead>
