@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
-import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event } from '@/types';
+import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, ChurchManager } from '@/types';
 import { 
   Users, CreditCard, Copy, Info, CheckCircle, Search, 
-  UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt
+  UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt, Settings, Key, UserCheck
 } from 'lucide-react';
 
 export default function ManagerDashboard() {
@@ -17,6 +17,18 @@ export default function ManagerDashboard() {
   const [church, setChurch] = useState<Church | null>(null);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<ChurchPaymentStatus | null>(null);
+  const [currentManager, setCurrentManager] = useState<ChurchManager | null>(null);
+  
+  // 담당자 정보 수정 모달 상태
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [mgrName, setMgrName] = useState('');
+  const [mgrPhone, setMgrPhone] = useState('');
+  const [mgrShirtSize, setMgrShirtSize] = useState('');
+  const [mgrCurrentPw, setMgrCurrentPw] = useState('');
+  const [mgrNewPw, setMgrNewPw] = useState('');
+  const [mgrNewPwConfirm, setMgrNewPwConfirm] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
   
   // 데이터 목록
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -102,10 +114,10 @@ export default function ManagerDashboard() {
     setOptions(opts);
 
     // 3. 데이터 로딩
-    loadData(sess.churchId, active.id);
+    loadData(sess.churchId, active.id, sess.loginId);
   }, [router]);
 
-  const loadData = (churchId: string, eventId: string) => {
+  const loadData = (churchId: string, eventId: string, loginId?: string) => {
     const list = db.getParticipants().filter(p => p.church_id === churchId && p.event_id === eventId);
     setParticipants(list);
 
@@ -121,6 +133,99 @@ export default function ManagerDashboard() {
     const mgrs = db.getManagers ? db.getManagers() : [];
     const count = mgrs.filter((m: any) => m.church_id === churchId && m.status === 'approved').length;
     setApprovedManagersCount(count);
+
+    if (loginId || session?.loginId) {
+      const curLoginId = loginId || session?.loginId;
+      const curMgr = mgrs.find((m: ChurchManager) => m.login_id === curLoginId);
+      if (curMgr) setCurrentManager(curMgr);
+    }
+  };
+
+  const openProfileModal = () => {
+    if (currentManager) {
+      setMgrName(currentManager.name || '');
+      setMgrPhone(currentManager.phone || '');
+      setMgrShirtSize(currentManager.shirt_size || '');
+    } else if (session) {
+      setMgrName(session.name || '');
+    }
+    setMgrCurrentPw('');
+    setMgrNewPw('');
+    setMgrNewPwConfirm('');
+    setProfileError('');
+    setProfileSuccess('');
+    setShowProfileModal(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+
+    if (!currentManager) {
+      setProfileError('담당자 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!mgrName.trim()) {
+      setProfileError('이름을 입력해 주세요.');
+      return;
+    }
+
+    if (!mgrPhone.trim()) {
+      setProfileError('연락처를 입력해 주세요.');
+      return;
+    }
+
+    const isPasswordChange = mgrCurrentPw || mgrNewPw || mgrNewPwConfirm;
+    if (isPasswordChange) {
+      if (!mgrCurrentPw) {
+        setProfileError('비밀번호를 변경하려면 현재 비밀번호를 입력해 주세요.');
+        return;
+      }
+      if (mgrCurrentPw !== currentManager.password_hash) {
+        setProfileError('현재 비밀번호가 일치하지 않습니다.');
+        return;
+      }
+      if (!mgrNewPw || mgrNewPw.length < 4) {
+        setProfileError('새 비밀번호는 4자 이상이어야 합니다.');
+        return;
+      }
+      if (mgrNewPw !== mgrNewPwConfirm) {
+        setProfileError('새 비밀번호와 확인용 비밀번호가 일치하지 않습니다.');
+        return;
+      }
+    }
+
+    try {
+      const updates: Partial<ChurchManager> = {
+        name: mgrName.trim(),
+        phone: mgrPhone.trim(),
+        shirt_size: mgrShirtSize
+      };
+
+      if (isPasswordChange) {
+        updates.password_hash = mgrNewPw;
+      }
+
+      const updated = db.updateManager(currentManager.id, updates);
+      setCurrentManager(updated);
+
+      // 세션 localStorage 업데이트
+      if (session) {
+        const updatedSess = { ...session, name: updated.name };
+        setSession(updatedSess);
+        localStorage.setItem('evt_session', JSON.stringify(updatedSess));
+      }
+
+      setProfileSuccess('내 정보가 성공적으로 수정되었습니다.');
+      setTimeout(() => {
+        setShowProfileModal(false);
+        setProfileSuccess('');
+      }, 1200);
+    } catch (err: any) {
+      setProfileError(err.message || '수정 중 오류가 발생했습니다.');
+    }
   };
 
   const handleLogout = () => {
@@ -339,9 +444,14 @@ export default function ManagerDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
-          <span className="text-xs text-slate-300 font-medium bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-            접속자: {session.name}
-          </span>
+          <button
+            onClick={openProfileModal}
+            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition-all-custom"
+            title="담당자 정보 및 비밀번호 수정"
+          >
+            <Settings className="w-3.5 h-3.5 text-indigo-400" />
+            내 정보 수정 ({session.name})
+          </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-white font-semibold transition-all-custom"
@@ -1053,6 +1163,139 @@ export default function ManagerDashboard() {
                 </button>
               </div>
 
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CHURCH MANAGER PROFILE & PASSWORD EDIT MODAL */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                <Settings className="w-5 h-5 text-indigo-600" />
+                내 담당자 정보 및 비밀번호 변경
+              </h3>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
+              {/* 아이디 (읽기 전용) */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">로그인 아이디</label>
+                <input
+                  type="text"
+                  value={session?.loginId || ''}
+                  disabled
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-semibold cursor-not-allowed"
+                />
+              </div>
+
+              {/* 이름 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">담당자 성함 <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  value={mgrName}
+                  onChange={e => setMgrName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="성함 입력"
+                  required
+                />
+              </div>
+
+              {/* 연락처 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">연락처 <span className="text-rose-500">*</span></label>
+                <input
+                  type="tel"
+                  value={mgrPhone}
+                  onChange={e => setMgrPhone(formatPhone(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="010-0000-0000"
+                  required
+                />
+              </div>
+
+              {/* 티셔츠 사이즈 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">티셔츠 사이즈 (선택)</label>
+                <select
+                  value={mgrShirtSize}
+                  onChange={e => setMgrShirtSize(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-medium"
+                >
+                  <option value="">- 미선택 -</option>
+                  {options.shirtSizes.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 비밀번호 변경 구역 */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-3 mt-1">
+                <h4 className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-amber-600" />
+                  비밀번호 변경 (변경할 경우에만 입력)
+                </h4>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-600">현재 비밀번호</label>
+                  <input
+                    type="password"
+                    value={mgrCurrentPw}
+                    onChange={e => setMgrCurrentPw(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    placeholder="현재 비밀번호 입력"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-600">새 비밀번호</label>
+                  <input
+                    type="password"
+                    value={mgrNewPw}
+                    onChange={e => setMgrNewPw(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    placeholder="새 비밀번호 (4자 이상)"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-600">새 비밀번호 확인</label>
+                  <input
+                    type="password"
+                    value={mgrNewPwConfirm}
+                    onChange={e => setMgrNewPwConfirm(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    placeholder="새 비밀번호 다시 입력"
+                  />
+                </div>
+              </div>
+
+              {profileError && (
+                <p className="text-rose-600 text-xs font-semibold">{profileError}</p>
+              )}
+              {profileSuccess && (
+                <p className="text-emerald-600 text-xs font-semibold">{profileSuccess}</p>
+              )}
+
+              {/* 액션 버튼 */}
+              <div className="flex gap-2 justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  저장하기
+                </button>
+              </div>
             </form>
           </div>
         </div>

@@ -119,6 +119,16 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const [groupingGroups, setGroupingGroups] = useState<GroupingGroup[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
 
+  // 담당자 정보 수정 모달 상태 (지방회 관리자용)
+  const [editingManager, setEditingManager] = useState<ChurchManager | null>(null);
+  const [emName, setEmName] = useState('');
+  const [emPhone, setEmPhone] = useState('');
+  const [emChurchId, setEmChurchId] = useState('');
+  const [emShirtSize, setEmShirtSize] = useState('');
+  const [emMemo, setEmMemo] = useState('');
+  const [emNewPw, setEmNewPw] = useState('');
+  const [emError, setEmError] = useState('');
+
   // 행사별 기본 설정 옵션
   const [options, setOptions] = useState<{
     departments: string[];
@@ -709,6 +719,60 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
       loadAllData(district.id, event?.id || '');
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const openEditManagerModal = (m: ChurchManager) => {
+    setEditingManager(m);
+    setEmName(m.name || '');
+    setEmPhone(m.phone || '');
+    setEmChurchId(m.church_id || '');
+    setEmShirtSize(m.shirt_size || '');
+    setEmMemo(m.memo || '');
+    setEmNewPw('');
+    setEmError('');
+  };
+
+  const handleSaveManagerByAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmError('');
+
+    if (!editingManager || !district) return;
+
+    if (!emName.trim()) {
+      setEmError('담당자 이름을 입력해 주세요.');
+      return;
+    }
+
+    if (!editingManager.is_admin && !emChurchId) {
+      setEmError('소속 교회를 선택해 주세요.');
+      return;
+    }
+
+    if (emNewPw && emNewPw.length < 4) {
+      setEmError('비밀번호를 변경하려면 4자 이상 입력해 주세요.');
+      return;
+    }
+
+    try {
+      const updates: Partial<ChurchManager> = {
+        name: emName.trim(),
+        phone: emPhone.trim(),
+        church_id: emChurchId,
+        shirt_size: emShirtSize,
+        memo: emMemo.trim()
+      };
+
+      if (emNewPw) {
+        updates.password_hash = emNewPw;
+      }
+
+      db.updateManager(editingManager.id, updates);
+      setEditingManager(null);
+      loadAllData(district.id, event?.id || '');
+      alert(`[${emName.trim()}] 담당자 정보가 수정되었습니다.`);
+    } catch (err: any) {
+      setEmError(err.message || '수정 중 오류가 발생했습니다.');
     }
   };
 
@@ -2127,11 +2191,21 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                 </select>
                               )}
 
+                              <button
+                                type="button"
+                                onClick={() => openEditManagerModal(m)}
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1 px-2.5 rounded border border-indigo-200 text-[10px] transition-all-custom flex items-center gap-1"
+                                title="담당자 정보 수정"
+                              >
+                                <Edit className="w-3 h-3" />
+                                수정
+                              </button>
+
                               {!(m.is_admin ?? (m.church_id === '')) && (
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteManager(m.id, m.name)}
-                                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[10px] transition-all-custom ml-2"
+                                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[10px] transition-all-custom ml-1"
                                 >
                                   삭제
                                 </button>
@@ -3269,6 +3343,138 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 </button>
               </div>
 
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CHURCH MANAGER EDIT MODAL (FOR DISTRICT ADMIN) */}
+      {editingManager && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                <Edit className="w-5 h-5 text-indigo-600" />
+                교회 담당자 정보 관리자 수정
+              </h3>
+            </div>
+
+            <form onSubmit={handleSaveManagerByAdmin} className="flex flex-col gap-4">
+              {/* 아이디 (읽기 전용) */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">로그인 아이디</label>
+                <input
+                  type="text"
+                  value={editingManager.login_id}
+                  disabled
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-semibold cursor-not-allowed"
+                />
+              </div>
+
+              {/* 이름 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">담당자 이름 <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  value={emName}
+                  onChange={e => setEmName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="담당자 이름"
+                  required
+                />
+              </div>
+
+              {/* 연락처 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">연락처</label>
+                <input
+                  type="tel"
+                  value={emPhone}
+                  onChange={e => setEmPhone(formatPhone(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="010-0000-0000"
+                />
+              </div>
+
+              {/* 소속 교회 선택 */}
+              {!editingManager.is_admin && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-600">소속 교회 <span className="text-rose-500">*</span></label>
+                  <select
+                    value={emChurchId}
+                    onChange={e => setEmChurchId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-medium"
+                    required
+                  >
+                    <option value="">-- 소속 교회 선택 --</option>
+                    {churches.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 티셔츠 사이즈 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">티셔츠 사이즈</label>
+                <select
+                  value={emShirtSize}
+                  onChange={e => setEmShirtSize(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-medium"
+                >
+                  <option value="">- 미선택 -</option>
+                  {options.shirtSizes.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 비밀번호 강제 변경 */}
+              <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-200 flex flex-col gap-2">
+                <label className="text-xs font-bold text-amber-900 flex items-center gap-1">
+                  비밀번호 강제 변경 (입력 시 변경됨)
+                </label>
+                <input
+                  type="text"
+                  value={emNewPw}
+                  onChange={e => setEmNewPw(e.target.value)}
+                  className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-mono"
+                  placeholder="새 비밀번호 (4자 이상 입력 시 즉시 변경)"
+                />
+              </div>
+
+              {/* 메모 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">관리자 메모</label>
+                <input
+                  type="text"
+                  value={emMemo}
+                  onChange={e => setEmMemo(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="메모 입력"
+                />
+              </div>
+
+              {emError && (
+                <p className="text-rose-600 text-xs font-semibold">{emError}</p>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingManager(null)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  저장하기
+                </button>
+              </div>
             </form>
           </div>
         </div>
