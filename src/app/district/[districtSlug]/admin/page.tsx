@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
+import { formatPhone } from '@/utils/format';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
 import { storageFirebase } from '@/utils/firebaseClient';
@@ -15,7 +16,7 @@ import {
 import { 
   Settings, Users, ShieldCheck, UserCheck, Download, Grid, Plus, Trash2, 
   Save, AlertTriangle, CheckCircle, ClipboardList, Info, FileSpreadsheet,
-  ArrowRight, ShieldAlert, Edit, LogOut, Copy,
+  ArrowRight, ShieldAlert, Edit, LogOut, Copy, UserPlus,
   ArrowUpDown, ChevronUp, ChevronDown, RefreshCw
 } from 'lucide-react';
 
@@ -926,6 +927,150 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         };
       });
       excelUtils.exportRawData(formatted, `${district?.name}_사진촬영_미동의자_명단`);
+    }
+  };
+
+  // ==========================================
+  // TAB 3-2: 참가자 직접 추가/수정 폼 관련
+  // ==========================================
+  const [showAdminAddForm, setShowAdminAddForm] = useState(false);
+  const [adminEditingParticipant, setAdminEditingParticipant] = useState<Participant | null>(null);
+
+  // 폼 입력 상태
+  const [apType, setApType] = useState<'학생' | '교사' | '봉사자'>('학생');
+  const [apChurchId, setApChurchId] = useState('');
+  const [apName, setApName] = useState('');
+  const [apGender, setApGender] = useState<'남' | '여'>('남');
+  const [apDept, setApDept] = useState('');
+  const [apBirthYear, setApBirthYear] = useState('');
+  const [apGuardianName, setApGuardianName] = useState('');
+  const [apGuardianPhone, setApGuardianPhone] = useState('');
+  const [apPersonalPhone, setApPersonalPhone] = useState('');
+  const [apRole, setApRole] = useState('');
+  const [apShirtSize, setApShirtSize] = useState('');
+  const [apHealthNote, setApHealthNote] = useState('');
+  const [apPhotoConsent, setApPhotoConsent] = useState(true);
+  const [apCustomConsentAgreed, setApCustomConsentAgreed] = useState(false);
+  const [apAttendance, setApAttendance] = useState<string[]>([]);
+  const [apMemo, setApMemo] = useState('');
+  const [apFormError, setApFormError] = useState('');
+
+  const openAdminAddForm = () => {
+    setApType('학생');
+    setApChurchId(churches[0]?.id || '');
+    setApName('');
+    setApGender('남');
+    setApDept(options.departments[0] || '');
+    setApBirthYear(options.birthYears[0] || '');
+    setApGuardianName('');
+    setApGuardianPhone('');
+    setApPersonalPhone('');
+    setApRole('');
+    setApShirtSize(options.shirtSizes[0] || 'M');
+    setApHealthNote('');
+    setApPhotoConsent(true);
+    setApCustomConsentAgreed(false);
+    setApAttendance(options.attendanceDates.map(d => d.date));
+    setApMemo('');
+    setAdminEditingParticipant(null);
+    setApFormError('');
+    setShowAdminAddForm(true);
+  };
+
+  const openAdminEditForm = (p: Participant) => {
+    setAdminEditingParticipant(p);
+    setApType(p.participant_type);
+    setApChurchId(p.church_id);
+    setApName(p.name);
+    setApGender(p.gender);
+    setApDept(p.department || '');
+    setApBirthYear(p.birth_year || '');
+    setApGuardianName(p.guardian_name || '');
+    setApGuardianPhone(p.guardian_phone || '');
+    setApPersonalPhone(p.personal_phone || '');
+    setApRole(p.role || '');
+    setApShirtSize(p.shirt_size);
+    setApHealthNote(p.health_note || '');
+    setApPhotoConsent(p.photo_consent);
+    setApCustomConsentAgreed(p.custom_consent_agreed || false);
+    setApAttendance(p.attendance_schedule);
+    setApMemo(p.memo || '');
+    setApFormError('');
+    setShowAdminAddForm(true);
+  };
+
+  const closeAdminForm = () => {
+    setShowAdminAddForm(false);
+    setAdminEditingParticipant(null);
+    setApFormError('');
+  };
+
+  const handleAdminSaveParticipant = (e: React.FormEvent) => {
+    e.preventDefault();
+    setApFormError('');
+
+    if (!district || !event) return;
+
+    if (!apChurchId) {
+      setApFormError('소속 교회를 선택해 주세요.');
+      return;
+    }
+    if (!apName.trim()) {
+      setApFormError('이름을 입력해 주세요.');
+      return;
+    }
+    if (apType === '학생') {
+      if (!apGuardianName.trim() || !apGuardianPhone.trim()) {
+        setApFormError('보호자 성함 및 연락처를 입력해 주세요.');
+        return;
+      }
+    } else {
+      if (!apPersonalPhone.trim()) {
+        setApFormError('본인 연락처를 입력해 주세요.');
+        return;
+      }
+    }
+    if (apAttendance.length === 0) {
+      setApFormError('참석 일정을 최소 하루 이상 선택해 주세요.');
+      return;
+    }
+    if (event?.custom_consent_enabled && event.custom_consent_required && !apCustomConsentAgreed) {
+      setApFormError(`'${event.custom_consent_title || '추가 동의서'}'에 동의해야 저장이 가능합니다.`);
+      return;
+    }
+
+    const payload = {
+      district_id: district.id,
+      event_id: event.id,
+      church_id: apChurchId,
+      participant_type: apType,
+      name: apName.trim(),
+      gender: apGender,
+      department: apType === '학생' ? apDept : undefined,
+      birth_year: apType === '학생' && (apDept === '유아부' || apDept === '유치부') ? apBirthYear : undefined,
+      guardian_name: apType === '학생' ? apGuardianName.trim() : undefined,
+      guardian_phone: apType === '학생' ? apGuardianPhone.trim() : undefined,
+      personal_phone: apType !== '학생' ? apPersonalPhone.trim() : undefined,
+      role: apType !== '학생' ? apRole.trim() : undefined,
+      shirt_size: apShirtSize,
+      health_note: apHealthNote.trim(),
+      photo_consent: apPhotoConsent,
+      custom_consent_agreed: event?.custom_consent_enabled ? apCustomConsentAgreed : false,
+      attendance_schedule: apAttendance,
+      edit_password_hash: adminEditingParticipant ? adminEditingParticipant.edit_password_hash : '1234_hashed',
+      memo: apMemo.trim()
+    };
+
+    try {
+      if (adminEditingParticipant) {
+        db.updateParticipant(adminEditingParticipant.id, payload);
+      } else {
+        db.createParticipant(payload);
+      }
+      closeAdminForm();
+      loadAllData(district.id, event.id);
+    } catch (err: any) {
+      setApFormError(err.message || '저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -2246,9 +2391,18 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-6">
             
             {/* Header */}
-            <div>
-              <h3 className="font-bold text-slate-800 text-sm">전체 등록자 조회 및 엑셀 추출</h3>
-              <p className="text-xs text-slate-500 mt-0.5">전체 참여자의 상세 정보를 보고, 선택된 필드로 커스텀 엑셀 또는 프리셋을 출력할 수 있습니다.</p>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">전체 등록자 조회 및 엑셀 추출</h3>
+                <p className="text-xs text-slate-500 mt-0.5">전체 참여자의 상세 정보를 보고, 선택된 필드로 커스텀 엑셀 또는 프리셋을 출력할 수 있습니다.</p>
+              </div>
+              <button
+                onClick={openAdminAddForm}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1 transition-all-custom self-start sm:self-auto shrink-0"
+              >
+                <UserPlus className="w-4 h-4" />
+                참가자 직접 추가
+              </button>
             </div>
 
             {/* Excel Columns Selector */}
@@ -2437,21 +2591,33 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             {p.participant_type === '학생' ? `${p.guardian_name} (${p.guardian_phone})` : p.personal_phone}
                           </td>
                           <td className="p-3">
-                            <button
-                              onClick={() => {
-                                if (p.department === '교회담당자') {
-                                  handleDeleteManager(p.id, p.name);
-                                } else {
-                                  if (confirm('이 참가자를 삭제하시겠습니까?')) {
-                                    db.deleteParticipant(p.id);
-                                    loadAllData(district.id, event?.id || '');
+                            <div className="flex items-center gap-1.5">
+                              {p.department !== '교회담당자' && (
+                                <button
+                                  onClick={() => openAdminEditForm(p)}
+                                  className="p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-all-custom"
+                                  title="수정"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  if (p.department === '교회담당자') {
+                                    handleDeleteManager(p.id, p.name);
+                                  } else {
+                                    if (confirm('이 참가자를 삭제하시겠습니까?')) {
+                                      db.deleteParticipant(p.id);
+                                      loadAllData(district.id, event?.id || '');
+                                    }
                                   }
-                                }
-                              }}
-                              className="text-rose-600 hover:underline cursor-pointer"
-                            >
-                              삭제
-                            </button>
+                                }}
+                                className="p-1.5 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 border border-slate-200 rounded-lg text-rose-600 transition-all-custom"
+                                title="삭제"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2824,6 +2990,286 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 확인
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PARTICIPANT ADD/EDIT MODAL FORM */}
+      {showAdminAddForm && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-4 shadow-2xl">
+            <h3 className="font-bold text-slate-900 text-base">
+              {adminEditingParticipant ? '참가자 등록 정보 수정' : '신규 참가자 직접 등록'}
+            </h3>
+            
+            <form onSubmit={handleAdminSaveParticipant} className="flex flex-col gap-4">
+              
+              {/* 소속 교회 선택 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">소속 교회</label>
+                <select
+                  value={apChurchId}
+                  onChange={e => setApChurchId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-semibold"
+                >
+                  <option value="">교회 선택</option>
+                  {churches.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 구분 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">구분</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['학생', '교사', '봉사자'] as const).map(t => (
+                    <button
+                      type="button"
+                      key={t}
+                      onClick={() => setApType(t)}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all-custom border ${
+                        apType === t 
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 이름 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">이름</label>
+                <input
+                  type="text"
+                  value={apName}
+                  onChange={e => setApName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                />
+              </div>
+
+              {/* 성별 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">성별</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['남', '여'] as const).map(g => (
+                    <button
+                      type="button"
+                      key={g}
+                      onClick={() => setApGender(g)}
+                      className={`py-2 px-3 rounded-lg text-xs font-semibold border ${
+                        apGender === g 
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 학생 전용: 부서/학년 */}
+              {apType === '학생' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-600">부서 / 학년</label>
+                    <select
+                      value={apDept}
+                      onChange={e => setApDept(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    >
+                      <option value="">부서 선택</option>
+                      {options.departments.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 유아부/유치부 전용: 출생년도 */}
+                  {(apDept === '유아부' || apDept === '유치부') && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-600">출생년도</label>
+                      <select
+                        value={apBirthYear}
+                        onChange={e => setApBirthYear(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                      >
+                        {options.birthYears.map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* 보호자명 */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-600">보호자 이름</label>
+                    <input
+                      type="text"
+                      value={apGuardianName}
+                      onChange={e => setApGuardianName(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    />
+                  </div>
+
+                  {/* 보호자 연락처 */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-600">보호자 연락처</label>
+                    <input
+                      type="tel"
+                      value={apGuardianPhone}
+                      onChange={e => setApGuardianPhone(formatPhone(e.target.value))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 교사/봉사자 전용: 본인폰 & 역할 */}
+              {apType !== '학생' && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-600">본인 연락처</label>
+                    <input
+                      type="tel"
+                      value={apPersonalPhone}
+                      onChange={e => setApPersonalPhone(formatPhone(e.target.value))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-600">역할 / 직분</label>
+                    <input
+                      type="text"
+                      value={apRole}
+                      onChange={e => setApRole(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 셔츠 사이즈 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">티셔츠 사이즈</label>
+                <select
+                  value={apShirtSize}
+                  onChange={e => setApShirtSize(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                >
+                  {(() => {
+                    const isChildDeptActive = options.departments.some(d => 
+                      d.includes('유아') || d.includes('유치') || d.includes('초등')
+                    );
+                    const displaySizes = isChildDeptActive 
+                      ? options.shirtSizes 
+                      : options.shirtSizes.filter(size => !['110', '120', '130', '140', '150'].includes(size));
+                    return displaySizes.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ));
+                  })()}
+                </select>
+              </div>
+
+              {/* 참석 일정 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-600">참석 일정</label>
+                <div className="flex flex-wrap gap-2">
+                  {options.attendanceDates.map(d => {
+                    const isChecked = apAttendance.includes(d.date);
+                    return (
+                      <button
+                        type="button"
+                        key={d.date}
+                        onClick={() => {
+                          if (isChecked) {
+                            setApAttendance(apAttendance.filter(x => x !== d.date));
+                          } else {
+                            setApAttendance([...apAttendance, d.date]);
+                          }
+                        }}
+                        className={`py-1.5 px-3 rounded-lg text-[10px] font-bold border transition-all-custom ${
+                          isChecked 
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-white text-slate-500 border-slate-200'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 건강상 주의사항 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">건강 주의사항</label>
+                <input
+                  type="text"
+                  value={apHealthNote}
+                  onChange={e => setApHealthNote(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                />
+              </div>
+
+              {/* 비고 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">비고 (메모)</label>
+                <input
+                  type="text"
+                  value={apMemo}
+                  onChange={e => setApMemo(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                />
+              </div>
+
+              {/* 추가 동의서 (지방회 관리자 설정에 따름) */}
+              {event?.custom_consent_enabled && (
+                <div className="flex items-start gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <input
+                    type="checkbox"
+                    id="apCustomConsentAgreed"
+                    checked={apCustomConsentAgreed}
+                    onChange={e => setApCustomConsentAgreed(e.target.checked)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 mt-0.5"
+                  />
+                  <label htmlFor="apCustomConsentAgreed" className="text-2xs text-slate-600 leading-normal cursor-pointer select-none ml-2">
+                    <span className="font-bold text-slate-800">
+                      [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
+                    </span>
+                    {event.custom_consent_content && (
+                      <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                    )}
+                  </label>
+                </div>
+              )}
+
+              {apFormError && (
+                <p className="text-rose-600 text-xs font-semibold">{apFormError}</p>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={closeAdminForm}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all-custom"
+                >
+                  저장
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}
