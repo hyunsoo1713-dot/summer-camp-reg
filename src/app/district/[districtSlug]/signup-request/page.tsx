@@ -24,6 +24,7 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
   const [selectedChurchId, setSelectedChurchId] = useState<string>('');
   const [newChurchName, setNewChurchName] = useState<string>('');
   const [managerName, setManagerName] = useState<string>('');
+  const [gender, setGender] = useState<'남' | '여'>('여');
   const [phone, setPhone] = useState<string>('');
   const [loginId, setLoginId] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -111,6 +112,7 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
         district_id: district.id,
         church_id: targetChurchId,
         name: managerName.trim(),
+        gender: gender,
         phone: phone.trim(),
         login_id: loginId.trim(),
         password_hash: password,
@@ -261,6 +263,27 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
               onChange={e => setManagerName(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm input-focus-ring"
             />
+          </div>
+
+          {/* 성별 */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-bold text-slate-700">성별</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['남', '여'] as const).map(g => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGender(g)}
+                  className={`py-3 px-4 rounded-xl font-bold text-xs transition-all-custom text-center border ${
+                    gender === g
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {g}자
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 연락처 */}

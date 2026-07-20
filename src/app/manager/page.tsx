@@ -22,6 +22,7 @@ export default function ManagerDashboard() {
   // 담당자 정보 수정 모달 상태
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [mgrName, setMgrName] = useState('');
+  const [mgrGender, setMgrGender] = useState<'남' | '여'>('여');
   const [mgrPhone, setMgrPhone] = useState('');
   const [mgrShirtSize, setMgrShirtSize] = useState('');
   const [mgrCurrentPw, setMgrCurrentPw] = useState('');
@@ -144,10 +145,12 @@ export default function ManagerDashboard() {
   const openProfileModal = () => {
     if (currentManager) {
       setMgrName(currentManager.name || '');
+      setMgrGender(currentManager.gender || '여');
       setMgrPhone(currentManager.phone || '');
       setMgrShirtSize(currentManager.shirt_size || '');
     } else if (session) {
       setMgrName(session.name || '');
+      setMgrGender('여');
     }
     setMgrCurrentPw('');
     setMgrNewPw('');
@@ -200,6 +203,7 @@ export default function ManagerDashboard() {
     try {
       const updates: Partial<ChurchManager> = {
         name: mgrName.trim(),
+        gender: mgrGender,
         phone: mgrPhone.trim(),
         shirt_size: mgrShirtSize
       };
@@ -1202,6 +1206,27 @@ export default function ManagerDashboard() {
                   placeholder="성함 입력"
                   required
                 />
+              </div>
+
+              {/* 성별 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">성별 <span className="text-rose-500">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['남', '여'] as const).map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setMgrGender(g)}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs transition-all-custom text-center border ${
+                        mgrGender === g
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {g}자
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 연락처 */}

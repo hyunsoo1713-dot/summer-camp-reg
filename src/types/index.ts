@@ -46,6 +46,7 @@ export interface ChurchManager {
   district_id?: string;
   church_id: string;
   name: string;
+  gender?: '남' | '여';
   phone: string;
   login_id: string;
   password_hash: string;

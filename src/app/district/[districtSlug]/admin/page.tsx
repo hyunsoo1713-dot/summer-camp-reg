@@ -122,6 +122,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   // 담당자 정보 수정 모달 상태 (지방회 관리자용)
   const [editingManager, setEditingManager] = useState<ChurchManager | null>(null);
   const [emName, setEmName] = useState('');
+  const [emGender, setEmGender] = useState<'남' | '여'>('여');
   const [emPhone, setEmPhone] = useState('');
   const [emChurchId, setEmChurchId] = useState('');
   const [emShirtSize, setEmShirtSize] = useState('');
@@ -725,6 +726,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const openEditManagerModal = (m: ChurchManager) => {
     setEditingManager(m);
     setEmName(m.name || '');
+    setEmGender(m.gender || '여');
     setEmPhone(m.phone || '');
     setEmChurchId(m.church_id || '');
     setEmShirtSize(m.shirt_size || '');
@@ -757,6 +759,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     try {
       const updates: Partial<ChurchManager> = {
         name: emName.trim(),
+        gender: emGender,
         phone: emPhone.trim(),
         church_id: emChurchId,
         shirt_size: emShirtSize,
@@ -3384,6 +3387,27 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 />
               </div>
 
+              {/* 성별 */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-600">성별 <span className="text-rose-500">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['남', '여'] as const).map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setEmGender(g)}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs transition-all-custom text-center border ${
+                        emGender === g
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {g}자
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* 연락처 */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-600">연락처</label>
@@ -3431,15 +3455,17 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
               {/* 비밀번호 강제 변경 */}
               <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-200 flex flex-col gap-2">
-                <label className="text-xs font-bold text-amber-900 flex items-center gap-1">
-                  비밀번호 강제 변경 (입력 시 변경됨)
+                <label className="text-xs font-bold text-amber-900 flex items-center justify-between">
+                  <span>비밀번호 변경 (선택사항)</span>
+                  <span className="text-[10px] text-amber-700 font-normal">비워둘 경우 기존 비밀번호 유지</span>
                 </label>
                 <input
-                  type="text"
+                  type="password"
+                  autoComplete="new-password"
                   value={emNewPw}
                   onChange={e => setEmNewPw(e.target.value)}
-                  className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs input-focus-ring font-mono"
-                  placeholder="새 비밀번호 (4자 이상 입력 시 즉시 변경)"
+                  className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
+                  placeholder="변경할 새 비밀번호 (4자 이상 시 변경)"
                 />
               </div>
 
