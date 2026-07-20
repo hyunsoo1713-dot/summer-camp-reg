@@ -778,26 +778,41 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const [adminFilterChurch, setAdminFilterChurch] = useState('');
   const [adminFilterType, setAdminFilterType] = useState('');
 
-  // 정렬 상태 및 핸들러
-  const [sortField, setSortField] = useState<'name' | 'church' | 'type' | 'gender' | 'shirt_size' | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  // 다중 정렬 상태 및 핸들러 (클릭 순서대로 정렬 우선순위 누적)
+  type SortFieldType = 'name' | 'church' | 'type' | 'gender' | 'shirt_size';
+  type SortKey = { field: SortFieldType; order: 'asc' | 'desc' };
+  const [sortKeys, setSortKeys] = useState<SortKey[]>([]);
 
-  const handleSort = (field: 'name' | 'church' | 'type' | 'gender' | 'shirt_size') => {
-    if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
+  const handleSort = (field: SortFieldType) => {
+    setSortKeys(prev => {
+      const existing = prev.find(k => k.field === field);
+      const rest = prev.filter(k => k.field !== field);
+      if (existing) {
+        // 같은 필드 재클릭: 방향 토글 후 맨 앞으로
+        return [{ field, order: existing.order === 'asc' ? 'desc' : 'asc' }, ...rest];
+      } else {
+        // 새 필드 클릭: 맨 앞에 추가 (기존 정렬 유지)
+        return [{ field, order: 'asc' }, ...prev];
+      }
+    });
   };
 
-  const renderSortIcon = (field: 'name' | 'church' | 'type' | 'gender' | 'shirt_size') => {
-    if (sortField !== field) {
+  const renderSortIcon = (field: SortFieldType) => {
+    const keyIndex = sortKeys.findIndex(k => k.field === field);
+    if (keyIndex === -1) {
       return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-40" />;
     }
-    return sortOrder === 'asc' 
-      ? <ChevronUp className="w-3.5 h-3.5 text-indigo-600 font-bold" />
-      : <ChevronDown className="w-3.5 h-3.5 text-indigo-600 font-bold" />;
+    const key = sortKeys[keyIndex];
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        {key.order === 'asc'
+          ? <ChevronUp className="w-3.5 h-3.5 text-indigo-600 font-bold" />
+          : <ChevronDown className="w-3.5 h-3.5 text-indigo-600 font-bold" />}
+        {sortKeys.length > 1 && (
+          <span className="text-[9px] font-bold text-indigo-500 leading-none">{keyIndex + 1}</span>
+        )}
+      </span>
+    );
   };
   
   // 엑셀 열 선택 체크박스
@@ -851,33 +866,26 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     return matchesSearch && matchesChurch && matchesType;
   });
 
+  const getFieldValue = (p: Participant, field: SortFieldType): string => {
+    if (field === 'name') return p.name || '';
+    if (field === 'church') return churches.find(c => c.id === p.church_id)?.name || '';
+    if (field === 'type') return `${p.participant_type || ''}_${p.department || ''}`;
+    if (field === 'gender') return p.gender || '';
+    if (field === 'shirt_size') return p.shirt_size || '';
+    return '';
+  };
+
   const sortedParticipants = [...filteredParticipants].sort((a, b) => {
-    if (!sortField) return 0;
+    if (sortKeys.length === 0) return 0;
 
-    let valA = '';
-    let valB = '';
+    for (const key of sortKeys) {
+      const valA = getFieldValue(a, key.field);
+      const valB = getFieldValue(b, key.field);
 
-    if (sortField === 'name') {
-      valA = a.name || '';
-      valB = b.name || '';
-    } else if (sortField === 'church') {
-      const chA = churches.find(c => c.id === a.church_id)?.name || '';
-      const chB = churches.find(c => c.id === b.church_id)?.name || '';
-      valA = chA;
-      valB = chB;
-    } else if (sortField === 'type') {
-      valA = `${a.participant_type || ''}_${a.department || ''}`;
-      valB = `${b.participant_type || ''}_${b.department || ''}`;
-    } else if (sortField === 'gender') {
-      valA = a.gender || '';
-      valB = b.gender || '';
-    } else if (sortField === 'shirt_size') {
-      valA = a.shirt_size || '';
-      valB = b.shirt_size || '';
+      if (valA < valB) return key.order === 'asc' ? -1 : 1;
+      if (valA > valB) return key.order === 'asc' ? 1 : -1;
+      // 같으면 다음 정렬 키로 넘어감
     }
-
-    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
     return 0;
   });
 
