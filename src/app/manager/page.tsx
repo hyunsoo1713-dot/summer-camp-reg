@@ -119,7 +119,34 @@ export default function ManagerDashboard() {
   }, [router]);
 
   const loadData = (churchId: string, eventId: string, loginId?: string) => {
-    const list = db.getParticipants().filter(p => p.church_id === churchId && p.event_id === eventId);
+    const mgrs = db.getManagers ? db.getManagers() : [];
+    const churchManagers = mgrs.filter((m: any) => m.church_id === churchId && m.status === 'approved' && !m.is_admin);
+    const mappedMgrs: Participant[] = churchManagers.map((m: any) => ({
+      id: m.id,
+      district_id: m.district_id,
+      event_id: eventId,
+      church_id: m.church_id,
+      participant_type: '교사',
+      name: m.name,
+      gender: m.gender || '여',
+      department: '교회담당자',
+      birth_year: '',
+      guardian_name: '',
+      guardian_phone: '',
+      personal_phone: m.phone,
+      shirt_size: m.shirt_size || '미선택',
+      photo_consent: true,
+      attendance_schedule: [],
+      edit_password_hash: '',
+      memo: m.memo || '교회 담당자 가입 계정',
+      created_at: m.created_at,
+      updated_at: m.created_at
+    }));
+
+    const list = [
+      ...db.getParticipants().filter(p => p.church_id === churchId && p.event_id === eventId),
+      ...mappedMgrs
+    ];
     setParticipants(list);
 
     const reqs = db.getSameGroupRequests().filter(r => r.church_id === churchId && r.event_id === eventId);
@@ -131,8 +158,7 @@ export default function ManagerDashboard() {
     const pStatus = db.getChurchPaymentStatuses().find(s => s.church_id === churchId && s.event_id === eventId) || null;
     setPaymentStatus(pStatus);
 
-    const mgrs = db.getManagers ? db.getManagers() : [];
-    const count = mgrs.filter((m: any) => m.church_id === churchId && m.status === 'approved').length;
+    const count = churchManagers.length;
     setApprovedManagersCount(count);
 
     if (loginId || session?.loginId) {
@@ -335,6 +361,10 @@ export default function ManagerDashboard() {
   };
 
   const openEditForm = (p: Participant) => {
+    if (p.department === '교회담당자') {
+      openProfileModal();
+      return;
+    }
     setEditingParticipant(p);
     setPType(p.participant_type);
     setPName(p.name);
@@ -769,13 +799,15 @@ export default function ManagerDashboard() {
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              onClick={() => handleDeleteParticipant(p.id, p.name)}
-                              className="p-1.5 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 border border-slate-200 rounded-lg text-rose-600 transition-all-custom"
-                              title="삭제"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {p.department !== '교회담당자' && (
+                              <button
+                                onClick={() => handleDeleteParticipant(p.id, p.name)}
+                                className="p-1.5 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 border border-slate-200 rounded-lg text-rose-600 transition-all-custom"
+                                title="삭제"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
