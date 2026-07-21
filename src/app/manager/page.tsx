@@ -470,9 +470,9 @@ export default function ManagerDashboard() {
 
   // 통계 계산
   const studentCount = participants.filter(p => p.participant_type === '학생').length;
-  const teacherCount = participants.filter(p => p.participant_type === '교사').length + approvedManagersCount;
+  const teacherCount = participants.filter(p => p.participant_type === '교사').length;
   const volunteerCount = participants.filter(p => p.participant_type === '봉사자').length;
-  const totalCount = participants.length + approvedManagersCount;
+  const totalCount = participants.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -488,14 +488,9 @@ export default function ManagerDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
-          <button
-            onClick={openProfileModal}
-            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition-all-custom"
-            title="담당자 정보 및 비밀번호 수정"
-          >
-            <Settings className="w-3.5 h-3.5 text-indigo-400" />
-            내 정보 수정 ({session.name})
-          </button>
+          <span className="text-xs text-slate-300 font-medium bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            접속자: {session.name}
+          </span>
           <button
             onClick={handleLogout}
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-white font-semibold transition-all-custom"

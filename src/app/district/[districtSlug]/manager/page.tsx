@@ -515,11 +515,8 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
   }
 
   // 통계 계산
-  const approvedManagers = db.getManagers(district.id).filter(m => m.church_id === church.id && m.status === 'approved');
-  const approvedManagersCount = approvedManagers.length;
-
   const studentCount = participants.filter(p => p.participant_type === '학생').length;
-  const teacherCount = participants.filter(p => p.participant_type === '교사').length + approvedManagersCount;
+  const teacherCount = participants.filter(p => p.participant_type === '교사').length;
   const volunteerCount = participants.filter(p => p.participant_type === '봉사자').length;
 
   return (
@@ -537,14 +534,6 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
           <button
-            onClick={openProfileModal}
-            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition-all-custom"
-            title="담당자 정보 및 비밀번호 수정"
-          >
-            <Settings className="w-3.5 h-3.5 text-indigo-400" />
-            내 정보 수정 ({session.name})
-          </button>
-          <button
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white font-semibold transition-colors disabled:opacity-50"
@@ -553,6 +542,9 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? '불러오는 중...' : '새로고침'}
           </button>
+          <span className="text-xs text-slate-300 font-medium bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            접속자: {session.name}
+          </span>
           <button
             onClick={handleLogout}
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-white font-semibold transition-all-custom"
@@ -596,7 +588,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
                   <span className="text-[10px] text-slate-500 block font-semibold">총 등록 인원</span>
-                  <span className="text-2xl font-black text-slate-950 mt-1 block">{participants.length + approvedManagersCount}명</span>
+                  <span className="text-2xl font-black text-slate-950 mt-1 block">{participants.length}명</span>
                 </div>
                 <div className="bg-indigo-50/50 p-4 rounded-xl text-center border border-indigo-100">
                   <span className="text-[10px] text-indigo-700 block font-semibold">학생</span>
@@ -709,10 +701,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               </h3>
               <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                 {options.shirtSizes.map(size => {
-                  // 참가자 + 담당자 사이즈 합산
-                  const participantCount = participants.filter(p => p.shirt_size === size).length;
-                  const managerCount = approvedManagers.filter(m => m.shirt_size === size).length;
-                  const count = participantCount + managerCount;
+                  const count = participants.filter(p => p.shirt_size === size).length;
                   if (count === 0) return null;
                   return (
                     <div key={size} className="flex justify-between text-xs font-semibold text-slate-600 border-b border-slate-100 pb-1.5">
