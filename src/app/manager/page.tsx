@@ -86,46 +86,60 @@ export default function ManagerDashboard() {
   const [reqError, setReqError] = useState('');
 
   useEffect(() => {
-    // 1. 인증 검증
-    const sessStr = localStorage.getItem('evt_session');
-    if (!sessStr) {
-      router.push('/login');
-      return;
-    }
-    const sess = JSON.parse(sessStr);
-    if (sess.role !== 'manager' || !sess.churchId) {
-      router.push('/login');
-      return;
-    }
-    setSession(sess);
+    const initAndLoad = async () => {
+      if (db.initForce) {
+        await db.initForce();
+      }
 
-    // 2. 행사 정보
-    const active = db.getActiveEvent();
-    if (!active) {
-      alert('활성화된 행사가 없습니다.');
-      router.push('/');
-      return;
-    }
-    setEvent(active);
+      // 1. 인증 검증
+      const sessStr = localStorage.getItem('evt_session');
+      if (!sessStr) {
+        router.push('/login');
+        return;
+      }
+      const sess = JSON.parse(sessStr);
+      if (sess.role !== 'manager' || !sess.churchId) {
+        router.push('/login');
+        return;
+      }
+      setSession(sess);
 
-    const ch = db.getChurches().find((c: Church) => c.id === sess.churchId) || null;
-    setChurch(ch);
+      // 2. 행사 정보
+      const active = db.getActiveEvent();
+      if (!active) {
+        alert('활성화된 행사가 없습니다.');
+        router.push('/');
+        return;
+      }
+      setEvent(active);
 
-    const opts = db.getEventOptions(active.id);
-    setOptions(opts);
+      const ch = db.getChurches().find((c: Church) => c.id === sess.churchId) || null;
+      setChurch(ch);
 
-    // 3. 데이터 로딩
-    loadData(sess.churchId, active.id, sess.loginId);
+      const opts = db.getEventOptions(active.id);
+      setOptions(opts);
+
+      // 3. 데이터 로딩
+      loadData(sess.churchId, active.id, sess.loginId);
+    };
+
+    initAndLoad();
   }, [router]);
 
   const loadData = (churchId: string, eventId: string, loginId?: string) => {
+    const curLoginId = loginId || session?.loginId;
     const mgrs = db.getManagers ? db.getManagers() : [];
-    const churchManagers = mgrs.filter((m: any) => m.church_id === churchId && m.status === 'approved' && !m.is_admin);
+    
+    // 해당 교회 담당자들 + 현재 로그인한 담당자 계정
+    const churchManagers = mgrs.filter((m: any) => 
+      !m.is_admin && (m.church_id === churchId || (curLoginId && m.login_id === curLoginId))
+    );
+
     const mappedMgrs: Participant[] = churchManagers.map((m: any) => ({
       id: m.id,
       district_id: m.district_id,
       event_id: eventId,
-      church_id: m.church_id,
+      church_id: m.church_id || churchId,
       participant_type: '교사',
       name: m.name,
       gender: m.gender || '여',
@@ -143,11 +157,8 @@ export default function ManagerDashboard() {
       updated_at: m.created_at
     }));
 
-    const list = [
-      ...db.getParticipants().filter(p => p.church_id === churchId && p.event_id === eventId),
-      ...mappedMgrs
-    ];
-    setParticipants(list);
+    const rawParticipants = db.getParticipants().filter(p => p.church_id === churchId && p.event_id === eventId);
+    setParticipants([...rawParticipants, ...mappedMgrs]);
 
     const reqs = db.getSameGroupRequests().filter(r => r.church_id === churchId && r.event_id === eventId);
     setRequests(reqs);
@@ -158,11 +169,10 @@ export default function ManagerDashboard() {
     const pStatus = db.getChurchPaymentStatuses().find(s => s.church_id === churchId && s.event_id === eventId) || null;
     setPaymentStatus(pStatus);
 
-    const count = churchManagers.length;
-    setApprovedManagersCount(count);
+    const approvedCount = churchManagers.filter((m: any) => m.status === 'approved').length;
+    setApprovedManagersCount(approvedCount);
 
-    if (loginId || session?.loginId) {
-      const curLoginId = loginId || session?.loginId;
+    if (curLoginId) {
       const curMgr = mgrs.find((m: ChurchManager) => m.login_id === curLoginId);
       if (curMgr) setCurrentManager(curMgr);
     }
@@ -724,6 +734,7 @@ export default function ManagerDashboard() {
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs input-focus-ring"
               >
                 <option value="">부서 전체</option>
+                <option value="교회담당자">교회담당자</option>
                 {options.departments.map(d => (
                   <option key={d} value={d}>{d}</option>
                 ))}
