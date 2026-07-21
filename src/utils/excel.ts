@@ -33,6 +33,7 @@ export const excelUtils = {
       if (columns.includes('소속 교회')) row['소속 교회'] = churchMap.get(p.church_id) || '-';
       if (columns.includes('보호자 이름')) row['보호자 이름'] = p.guardian_name || '-';
       if (columns.includes('보호자 연락처')) row['보호자 연락처'] = p.guardian_phone || '-';
+      if (columns.includes('본인 연락처')) row['본인 연락처'] = p.personal_phone || '-';
       if (columns.includes('티셔츠 사이즈')) row['티셔츠 사이즈'] = p.shirt_size;
       if (columns.includes('알레르기/건강상 주의사항')) row['알레르기/건강상 주의사항'] = p.health_note || '-';
       if (columns.includes('사진 촬영 동의 여부')) row['사진 촬영 동의 여부'] = p.photo_consent ? '동의' : '미동의';

@@ -885,7 +885,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   
   // 엑셀 열 선택 체크박스
   const [selectedExcelCols, setSelectedExcelCols] = useState<string[]>([
-    '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부'
+    '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '본인 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부'
   ]);
 
   const toggleExcelCol = (colName: string) => {
@@ -906,7 +906,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     church_id: m.church_id,
     participant_type: '교사',
     name: m.name,
-    gender: '남',
+    gender: m.gender || '여',
     department: '교회담당자',
     birth_year: '',
     guardian_name: '',
@@ -2487,7 +2487,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider">엑셀 출력 컬럼 커스텀 선택</h4>
               <div className="flex flex-wrap gap-2">
                 {[
-                  '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부', '비고'
+                  '이름', '참가 유형', '성별', '부서/학년', '출생년도', '소속 교회', '보호자 이름', '보호자 연락처', '본인 연락처', '티셔츠 사이즈', '알레르기/건강상 주의사항', '참석 일정', '추가 동의 여부', '비고'
                 ].map(col => {
                   const isChecked = selectedExcelCols.includes(col);
                   return (

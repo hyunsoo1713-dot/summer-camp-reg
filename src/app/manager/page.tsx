@@ -623,6 +623,28 @@ export default function ManagerDashboard() {
                 })}
               </div>
             </div>
+
+            {/* 6. 내 담당자 정보 수정 */}
+            <div className="bg-indigo-50 rounded-2xl p-6 shadow-sm border border-indigo-100 flex flex-col justify-between">
+              <div>
+                <h3 className="font-bold text-indigo-900 text-sm mb-2 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                  교회 담당자 정보 관리
+                </h3>
+                <p className="text-[11px] text-indigo-700 font-semibold mb-4 leading-relaxed">
+                  현재 로그인된 계정의 이름, 연락처, 비밀번호 등<br />
+                  접속자 정보를 변경하려면 아래 버튼을 클릭하세요.
+                </p>
+              </div>
+              <button
+                onClick={openProfileModal}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all-custom shadow-sm"
+              >
+                <Settings className="w-4 h-4" />
+                접속자 정보 변경하기
+              </button>
+            </div>
+
           </div>
         )}
 
