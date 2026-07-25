@@ -17,7 +17,7 @@ import {
   Settings, Users, ShieldCheck, UserCheck, Download, Grid, Plus, Trash2, 
   Save, AlertTriangle, CheckCircle, ClipboardList, Info, FileSpreadsheet,
   ArrowRight, ShieldAlert, Edit, LogOut, Copy, UserPlus,
-  ArrowUpDown, ChevronUp, ChevronDown, RefreshCw
+  ArrowUpDown, ChevronUp, ChevronDown, RefreshCw, X, Zap
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -1162,6 +1162,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   // 수동 이동 조 제어
   const [selectedMoveParticipantId, setSelectedMoveParticipantId] = useState<string>('');
   const [targetMoveGroupId, setTargetMoveGroupId] = useState<string>('');
+  const [quickMoveTarget, setQuickMoveTarget] = useState<{ id: string; name: string; currentGid?: string | null; participantType?: string } | null>(null);
 
   const handleCreateGroupingGroup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1266,6 +1267,38 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     setTargetMoveGroupId('');
     loadAllData(district.id, event.id);
     alert('참가자 조배정이 수동 변경되었습니다.');
+  };
+
+  const executeQuickMove = (targetGid: string | null) => {
+    if (!district || !event || !quickMoveTarget) return;
+    
+    if (quickMoveTarget.id.startsWith('virtual_cm_')) {
+      const realManagerId = quickMoveTarget.id.replace('virtual_cm_', '');
+      const cm = managers.find(m => m.id === realManagerId);
+      if (cm) {
+        const createdP = db.createParticipant({
+          district_id: district.id,
+          event_id: event.id,
+          church_id: cm.church_id,
+          participant_type: '교사',
+          name: cm.name,
+          gender: cm.gender || '남',
+          personal_phone: cm.phone,
+          role: '교회담당자',
+          shirt_size: 'L',
+          photo_consent: true,
+          attendance_schedule: ['전체 참석'],
+          edit_password_hash: '',
+        });
+        db.assignParticipantToGroup(createdP.id, targetGid);
+      }
+    } else {
+      db.assignParticipantToGroup(quickMoveTarget.id, targetGid);
+    }
+    
+    setSelectedMoveParticipantId('');
+    setQuickMoveTarget(null);
+    loadAllData(district.id, event.id);
   };
 
   const handleDeleteGg = async (id: string) => {
@@ -3018,14 +3051,27 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                               </div>
                               <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto mt-1">
                                 {members.map(m => (
-                                  <div key={m.id} className="flex justify-between items-center text-[10px] bg-white border border-slate-100 p-2 rounded-lg">
-                                    <span className="font-bold text-slate-900">
+                                  <div 
+                                    key={m.id} 
+                                    onClick={() => {
+                                      setSelectedMoveParticipantId(m.id);
+                                      setQuickMoveTarget({ 
+                                        id: m.id, 
+                                        name: m.name, 
+                                        currentGid: m.assigned_group_id, 
+                                        participantType: m.participant_type === '학생' ? (m.department || '학생') : m.participant_type 
+                                      });
+                                    }}
+                                    className="flex justify-between items-center text-[10px] bg-white border border-slate-100 hover:bg-indigo-50/80 hover:border-indigo-300 cursor-pointer p-2 rounded-lg transition-all-custom shadow-sm group"
+                                    title="클릭하면 즉시 다른 조로 배정/이동할 수 있습니다"
+                                  >
+                                    <span className="font-bold text-slate-900 group-hover:text-indigo-900">
                                       {m.name} ({m.gender})
-                                      <span className="text-[8px] text-slate-400 ml-1">
+                                      <span className="text-[8px] text-slate-400 ml-1 group-hover:text-indigo-500 font-medium">
                                         {m.participant_type === '학생' ? m.department : m.participant_type}
                                       </span>
                                     </span>
-                                    <span className="text-indigo-600 font-semibold">{churchMap.get(m.church_id) || '-'}</span>
+                                    <span className="text-indigo-600 font-semibold group-hover:font-extrabold">{churchMap.get(m.church_id) || '-'}</span>
                                   </div>
                                 ))}
                                 {members.length === 0 && (
@@ -3061,9 +3107,15 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                               key={p.id}
                               onClick={() => {
                                 setSelectedMoveParticipantId(p.id);
-                                alert(`${p.name} 아동이 선택되었습니다. 위의 '배정할 조 선택' 박스를 통해 조를 배정해 주세요.`);
+                                setQuickMoveTarget({ 
+                                  id: p.id, 
+                                  name: p.name, 
+                                  currentGid: null, 
+                                  participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
+                                });
                               }}
-                              className="bg-white hover:bg-rose-50 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                              className="bg-white hover:bg-rose-100 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                              title="클릭하면 바로 조에 배정할 수 있습니다"
                             >
                               {p.name} ({p.gender === '남' ? '남' : '여'})
                             </span>
@@ -3079,6 +3131,84 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           </div>
         )}
       </main>
+
+      {/* ⚡ 빠른 조 배정 모달 */}
+      {quickMoveTarget && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full inline-flex items-center gap-1 mb-1.5">
+                  <Zap className="w-3 h-3 fill-indigo-600 text-indigo-600" />
+                  빠른 조 배정 / 이동
+                </span>
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-1.5">
+                  {quickMoveTarget.name}
+                  <span className="text-xs font-semibold text-slate-500">({quickMoveTarget.participantType})</span>
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickMoveTarget(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              배정하시거나 이동하실 조를 선택해 주세요. 클릭 즉시 배정이 변경됩니다.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[50vh] overflow-y-auto py-1">
+              {groups
+                .filter(g => g.grouping_group_id === activeGgId)
+                .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }))
+                .map(g => {
+                  const isCurrent = quickMoveTarget.currentGid === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => !isCurrent && executeQuickMove(g.id)}
+                      disabled={isCurrent}
+                      className={`p-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 min-h-[60px] ${
+                        isCurrent 
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-400 cursor-not-allowed opacity-70 shadow-inner' 
+                          : 'bg-white hover:bg-indigo-600 hover:text-white hover:border-indigo-600 border-slate-200 text-slate-700 shadow-sm active:scale-95'
+                      }`}
+                    >
+                      <span className="text-center font-extrabold">{g.name}</span>
+                      {isCurrent && <span className="text-[9px] font-medium text-indigo-500">(현재 소속)</span>}
+                    </button>
+                  );
+                })}
+            </div>
+
+            <div className="flex gap-2 border-t border-slate-100 pt-3 mt-1">
+              <button
+                type="button"
+                onClick={() => executeQuickMove(null)}
+                disabled={!quickMoveTarget.currentGid}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all border ${
+                  !quickMoveTarget.currentGid
+                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                    : 'bg-rose-50 hover:bg-rose-600 hover:text-white border-rose-200 text-rose-700 active:scale-95'
+                }`}
+              >
+                미배정 상태로 변경
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickMoveTarget(null)}
+                className="py-2.5 px-5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 커스텀 확인/입력 모달 */}
       {customModal && customModal.isOpen && (
