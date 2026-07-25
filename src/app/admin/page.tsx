@@ -450,9 +450,9 @@ export default function AdminDashboard() {
     alert('참가자 조배정이 수동 변경되었습니다.');
   };
 
-  const handleDeleteGg = (id: string) => {
+  const handleDeleteGg = async (id: string) => {
     if (confirm('이 조편성 그룹과 소속 조원 배정을 모두 삭제하고 초기화하시겠습니까?')) {
-      db.deleteGroupingGroup(id);
+      await db.deleteGroupingGroup(id);
       loadAllData(event!.id);
     }
   };

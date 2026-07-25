@@ -1249,7 +1249,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     if (!district || !event) return;
     const ok = await showConfirm('조편성 그룹 삭제', '이 조편성 그룹과 소속 조원 배정을 모두 삭제하고 초기화하시겠습니까?');
     if (ok) {
-      db.deleteGroupingGroup(id);
+      await db.deleteGroupingGroup(id);
       loadAllData(district.id, event.id);
     }
   };

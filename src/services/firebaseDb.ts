@@ -919,23 +919,31 @@ export const firebaseDb = {
     setDoc(doc(dbFirestore, 'grouping_groups', id), newGroup).catch(err => console.error(err));
     return newGroup;
   },
-  deleteGroupingGroup(id: string): void {
-    memoryDb.groupingGroups = memoryDb.groupingGroups.filter(g => g.id !== id);
-    deleteDoc(doc(dbFirestore, 'grouping_groups', id)).catch(err => console.error(err));
-
+  async deleteGroupingGroup(id: string): Promise<void> {
+    // 메모리에서 삭제할 대상 수집
     const groups = memoryDb.groups.filter(g => g.grouping_group_id === id);
     const groupIds = groups.map(g => g.id);
+    const affectedParticipants = memoryDb.participants.filter(
+      p => p.assigned_group_id && groupIds.includes(p.assigned_group_id)
+    );
 
-    memoryDb.groups = memoryDb.groups.filter(g => g.grouping_group_id !== id);
+    // Firestore batch write로 원자적 삭제 (부분 실패 방지)
+    const batch = writeBatch(dbFirestore);
+    batch.delete(doc(dbFirestore, 'grouping_groups', id));
     groupIds.forEach(gid => {
-      deleteDoc(doc(dbFirestore, 'groups', gid)).catch(err => console.error(err));
+      batch.delete(doc(dbFirestore, 'groups', gid));
+    });
+    affectedParticipants.forEach(p => {
+      batch.update(doc(dbFirestore, 'participants', p.id), { assigned_group_id: null });
     });
 
-    memoryDb.participants.forEach(p => {
-      if (p.assigned_group_id && groupIds.includes(p.assigned_group_id)) {
-        p.assigned_group_id = null;
-        updateDoc(doc(dbFirestore, 'participants', p.id), { assigned_group_id: null }).catch(err => console.error(err));
-      }
+    await batch.commit();
+
+    // Firestore 커밋 성공 후에만 메모리 반영
+    memoryDb.groupingGroups = memoryDb.groupingGroups.filter(g => g.id !== id);
+    memoryDb.groups = memoryDb.groups.filter(g => g.grouping_group_id !== id);
+    affectedParticipants.forEach(p => {
+      p.assigned_group_id = null;
     });
   },
 
