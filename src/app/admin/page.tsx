@@ -1623,6 +1623,7 @@ export default function AdminDashboard() {
                             
                             return isStudentMatch || isTeacherMatch;
                           })
+                          .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
                           .map(p => {
                             const currentGid = p.assigned_group_id;
                             const currentGName = groups.find(g => g.id === currentGid)?.name || '미배정';
@@ -1661,7 +1662,7 @@ export default function AdminDashboard() {
                         .filter(g => g.grouping_group_id === activeGgId)
                         .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }))
                         .map(group => {
-                          const members = participants.filter(p => p.assigned_group_id === group.id);
+                          const members = participants.filter(p => p.assigned_group_id === group.id).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
                           const churchMap = new Map(churches.map(c => [c.id, c.name]));
                           return (
                             <div key={group.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-2">
