@@ -953,10 +953,11 @@ export const firebaseDb = {
   },
 
   getGroups(districtId?: string): Group[] {
-    return districtId ? memoryDb.groups.filter(g => g.district_id === districtId) : memoryDb.groups;
+    const list = districtId ? memoryDb.groups.filter(g => g.district_id === districtId) : memoryDb.groups;
+    return [...list].sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
   },
   getGroupsByGroupingId(ggId: string): Group[] {
-    return memoryDb.groups.filter(g => g.grouping_group_id === ggId).sort((a,b) => a.sort_order - b.sort_order);
+    return memoryDb.groups.filter(g => g.grouping_group_id === ggId).sort((a,b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
   },
   createGroup(g: Omit<Group, 'id' | 'created_at'> & { district_id?: string }): Group {
     const id = `g-${uuid()}`;

@@ -920,10 +920,11 @@ export const mockDb = {
 
   getGroups(districtId?: string): Group[] {
     const list = this.getData<Group>('evt_groups');
-    return districtId ? list.filter(g => g.district_id === districtId) : list;
+    const filtered = districtId ? list.filter(g => g.district_id === districtId) : list;
+    return [...filtered].sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
   },
   getGroupsByGroupingId(ggId: string): Group[] {
-    return this.getGroups().filter(g => g.grouping_group_id === ggId).sort((a,b) => a.sort_order - b.sort_order);
+    return this.getGroups().filter(g => g.grouping_group_id === ggId).sort((a,b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
   },
   createGroup(g: Omit<Group, 'id' | 'created_at'> & { district_id?: string }): Group {
     const list = this.getData<Group>('evt_groups');

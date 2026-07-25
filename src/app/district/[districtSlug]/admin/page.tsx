@@ -1200,7 +1200,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const handleRunAutoGrouping = (gg: GroupingGroup) => {
     if (!district || !event) return;
     // 1. 해당 그룹 산하에 실제 조(Group)들이 없으면 먼저 생성
-    let currentGroups = groups.filter(g => g.grouping_group_id === gg.id);
+    let currentGroups = groups.filter(g => g.grouping_group_id === gg.id).sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
     
     if (currentGroups.length === 0) {
       const list: Group[] = [];
@@ -2931,7 +2931,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       >
                         <option value="">배정할 조 선택</option>
                         <option value="unassigned">미배정 상태로 변경</option>
-                        {groups.filter(g => g.grouping_group_id === activeGgId).map(g => (
+                        {groups.filter(g => g.grouping_group_id === activeGgId).sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true })).map(g => (
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
                       </select>
@@ -2948,6 +2948,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
                       {groups
                         .filter(g => g.grouping_group_id === activeGgId)
+                        .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name, 'ko', { numeric: true }))
                         .map(group => {
                           const members = participants.filter(p => p.assigned_group_id === group.id);
                           const churchMap = new Map(churches.map(c => [c.id, c.name]));

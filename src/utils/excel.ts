@@ -170,8 +170,8 @@ export const excelUtils = {
         };
       })
       .sort((a, b) => {
-        // 조별 정렬
-        if (a['배정된 조'] !== b['배정된 조']) return a['배정된 조'].localeCompare(b['배정된 조']);
+        // 조별 정렬 (숫자 자연 정렬 적용: 1조 -> 2조 -> 10조)
+        if (a['배정된 조'] !== b['배정된 조']) return a['배정된 조'].localeCompare(b['배정된 조'], 'ko', { numeric: true });
         return a['이름'].localeCompare(b['이름']);
       });
 
