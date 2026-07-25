@@ -1153,6 +1153,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
   // 자동 조편성 옵션들
   const [optGender, setOptGender] = useState(true);
+  const [optGrade, setOptGrade] = useState(true);
   const [optChurch, setOptChurch] = useState(true);
   const [optRequest, setOptRequest] = useState(true);
   const [optAttendance, setOptAttendance] = useState(true);
@@ -1179,6 +1180,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         group_count: ggGroupCount,
         target_group_size: ggTargetSize,
         balance_gender: optGender,
+        balance_grade: optGrade,
         distribute_church: optChurch,
         consider_same_group_request: optRequest,
         consider_attendance: optAttendance,
@@ -2801,6 +2803,10 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={optGender} onChange={e => setOptGender(e.target.checked)} className="rounded" />
                       성별 균형 적용
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={optGrade} onChange={e => setOptGrade(e.target.checked)} className="rounded" />
+                      학년 균형 적용
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={optChurch} onChange={e => setOptChurch(e.target.checked)} className="rounded" />

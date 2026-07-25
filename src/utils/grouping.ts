@@ -130,6 +130,7 @@ export function runAutoGrouping(
       const W_SIZE = 100;      // 조 크기 균형 가중치 (매우 중요)
       const W_CHURCH = 40;     // 교회 분산 가중치 (한 조에 같은 교회가 너무 많으면 감점)
       const W_GENDER = 30;     // 성별 성비 가중치
+      const W_GRADE = 35;      // 학년(department) 균형 가중치
       const W_ATTENDANCE = 10; // 참석 일정 일치 가중치
 
       // 1) 조 인원수 점수 (인원이 적을수록 좋음)
@@ -156,7 +157,20 @@ export function runAutoGrouping(
         genderScore = diffAfter * W_GENDER;
       }
 
-      // 4) 참석 일정 일치 점수 (조 멤버들 간의 일정 겹침 정도)
+      // 4) 학년(department) 균형 점수 (각 조에 학년이 고르게 분포되도록)
+      let gradeScore = 0;
+      if (config.balance_grade) {
+        // 이 유닛의 department들과 같은 department가 현재 조에 이미 얼마나 있는지 계산
+        // department가 편중될수록 감점
+        unit.forEach(u => {
+          if (u.department) {
+            const sameDeptCount = currentMembers.filter(m => m.department === u.department).length;
+            gradeScore += sameDeptCount * W_GRADE;
+          }
+        });
+      }
+
+      // 5) 참석 일정 일치 점수 (조 멤버들 간의 일정 겹침 정도)
       let attendanceScore = 0;
       if (config.consider_attendance && unit.length > 0) {
         unit.forEach(u => {
@@ -169,7 +183,7 @@ export function runAutoGrouping(
         });
       }
 
-      const totalScore = sizeScore + churchScore + genderScore + attendanceScore;
+      const totalScore = sizeScore + churchScore + genderScore + gradeScore + attendanceScore;
 
       if (totalScore < minScore) {
         minScore = totalScore;

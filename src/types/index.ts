@@ -108,6 +108,7 @@ export interface GroupingGroup {
   group_count: number;
   target_group_size: number;
   balance_gender: boolean;
+  balance_grade: boolean;
   distribute_church: boolean;
   consider_same_group_request: boolean;
   consider_attendance: boolean;
