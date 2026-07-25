@@ -1236,7 +1236,30 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     if (!district || !event || !selectedMoveParticipantId) return;
     
     const gid = targetMoveGroupId === 'unassigned' ? null : targetMoveGroupId;
-    db.assignParticipantToGroup(selectedMoveParticipantId, gid);
+    
+    if (selectedMoveParticipantId.startsWith('virtual_cm_')) {
+      const realManagerId = selectedMoveParticipantId.replace('virtual_cm_', '');
+      const cm = managers.find(m => m.id === realManagerId);
+      if (cm) {
+        const createdP = db.createParticipant({
+          district_id: district.id,
+          event_id: event.id,
+          church_id: cm.church_id,
+          participant_type: '교사',
+          name: cm.name,
+          gender: cm.gender || '남',
+          personal_phone: cm.phone,
+          role: '교회담당자',
+          shirt_size: 'L',
+          photo_consent: true,
+          attendance_schedule: ['전체 참석'],
+          edit_password_hash: '',
+        });
+        db.assignParticipantToGroup(createdP.id, gid);
+      }
+    } else {
+      db.assignParticipantToGroup(selectedMoveParticipantId, gid);
+    }
     
     // 초기화 및 로드
     setSelectedMoveParticipantId('');
@@ -1266,6 +1289,40 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   const pendingManagers = managers.filter(m => m.status === 'pending');
   const totalExpectedAmount = paymentStatuses.reduce((acc, curr) => acc + curr.total_amount, 0);
   const paidChurchesCount = paymentStatuses.filter(s => s.status === '납부완료').length;
+
+  // 조편성 명단에 승인된 교회 담당자(아직 참가자로 등록 안된 분들)를 가상 미배정 교사로 포함하기 위한 연산
+  const currentActiveGg = groupingGroups.find(x => x.id === activeGgId);
+  const virtualManagerParticipants: Participant[] = (currentActiveGg && currentActiveGg.assign_teachers)
+    ? managers
+        .filter(m => {
+          if (m.status !== 'approved') return false;
+          const alreadyExists = participants.some(p =>
+            (p.name === m.name && p.personal_phone === m.phone) ||
+            (p.name === m.name && p.church_id === m.church_id && (p.participant_type === '교사' || p.participant_type === '봉사자'))
+          );
+          if (alreadyExists) return false;
+          return true;
+        })
+        .map(m => ({
+          id: `virtual_cm_${m.id}`,
+          district_id: m.district_id,
+          event_id: event ? event.id : '',
+          church_id: m.church_id,
+          participant_type: '교사',
+          name: `${m.name} [교회담당자]`,
+          gender: m.gender || '남',
+          personal_phone: m.phone,
+          role: '교회담당자',
+          shirt_size: 'L',
+          photo_consent: true,
+          attendance_schedule: ['전체 참석'],
+          edit_password_hash: '',
+          assigned_group_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }))
+    : [];
+  const targetParticipantsForGrouping = [...participants, ...virtualManagerParticipants];
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -2902,7 +2959,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                         className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs input-focus-ring"
                       >
                         <option value="">이동할 참가자 선택</option>
-                        {participants
+                        {targetParticipantsForGrouping
                           .filter(p => {
                             const gg = groupingGroups.find(x => x.id === activeGgId);
                             if (!gg) return false;
@@ -2988,7 +3045,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                         미배정 참가자 명단
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {participants
+                        {targetParticipantsForGrouping
                           .filter(p => {
                             const gg = groupingGroups.find(x => x.id === activeGgId);
                             if (!gg) return false;
@@ -2998,6 +3055,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             
                             return (isStudentMatch || isTeacherMatch) && !p.assigned_group_id;
                           })
+                          .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
                           .map(p => (
                             <span
                               key={p.id}
