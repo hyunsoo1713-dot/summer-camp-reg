@@ -1788,8 +1788,10 @@ export default function AdminDashboard() {
                             
                             const isStudentMatch = p.participant_type === '학생' && p.department && gg.included_departments.includes(p.department);
                             const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
+                            const isUnassigned = !p.assigned_group_id;
+                            const isAssignedToCurrentGg = groups.filter(g => g.grouping_group_id === activeGgId).some(g => g.id === p.assigned_group_id);
                             
-                            return isStudentMatch || isTeacherMatch;
+                            return isStudentMatch || isTeacherMatch || isUnassigned || isAssignedToCurrentGg;
                           })
                           .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
                           .map(p => {
@@ -1874,42 +1876,106 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* 미배정 인원들 */}
-                    <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 mt-2">
-                      <h4 className="font-bold text-xs text-rose-800 flex items-center gap-1.5 mb-2">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                        미배정 참가자 명단
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {targetParticipantsForGrouping
-                          .filter(p => {
+                    <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 mt-2 flex flex-col gap-4">
+                      <div>
+                        <h4 className="font-bold text-xs text-rose-800 flex items-center gap-1.5 mb-2">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                          본 그룹 대상 미배정 참가자 명단
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {targetParticipantsForGrouping
+                            .filter(p => {
+                              const gg = groupingGroups.find(x => x.id === activeGgId);
+                              if (!gg) return false;
+                              
+                              const isStudentMatch = p.participant_type === '학생' && p.department && gg.included_departments.includes(p.department);
+                              const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
+                              
+                              return (isStudentMatch || isTeacherMatch) && !p.assigned_group_id;
+                            })
+                            .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+                            .map(p => (
+                              <span
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedMoveParticipantId(p.id);
+                                  setQuickMoveTarget({ 
+                                    id: p.id, 
+                                    name: p.name, 
+                                    currentGid: null, 
+                                    participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
+                                  });
+                                }}
+                                className="bg-white hover:bg-rose-100 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                                title="클릭하면 바로 조에 배정할 수 있습니다"
+                              >
+                                {p.name} ({p.gender === '남' ? '남' : '여'})
+                              </span>
+                            ))
+                          }
+                          {targetParticipantsForGrouping.filter(p => {
                             const gg = groupingGroups.find(x => x.id === activeGgId);
                             if (!gg) return false;
-                            
                             const isStudentMatch = p.participant_type === '학생' && p.department && gg.included_departments.includes(p.department);
                             const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
-                            
                             return (isStudentMatch || isTeacherMatch) && !p.assigned_group_id;
-                          })
-                          .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
-                          .map(p => (
-                            <span
-                              key={p.id}
-                              onClick={() => {
-                                setSelectedMoveParticipantId(p.id);
-                                setQuickMoveTarget({ 
-                                  id: p.id, 
-                                  name: p.name, 
-                                  currentGid: null, 
-                                  participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
-                                });
-                              }}
-                              className="bg-white hover:bg-rose-100 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
-                              title="클릭하면 바로 조에 배정할 수 있습니다"
-                            >
-                              {p.name} ({p.gender === '남' ? '남' : '여'})
-                            </span>
-                          ))
-                        }
+                          }).length === 0 && (
+                            <span className="text-[10px] text-slate-400 italic py-1">본 그룹 대상 미배정자가 없습니다.</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 타 부서 미배정 참가자 (자유 배정 가능) */}
+                      <div className="border-t border-rose-200/60 pt-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+                            💡 타 부서 미배정 참가자 (자유 배정 가능)
+                          </h4>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mb-2.5 leading-relaxed">
+                          장애 아동이나 돌봄 필요 등으로 인해 실제 부서(학년) 정보를 변경하지 않고 현재 조에 배정해야 할 경우, 아래 이름을 클릭하여 즉시 배정하실 수 있습니다.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {targetParticipantsForGrouping
+                            .filter(p => {
+                              const gg = groupingGroups.find(x => x.id === activeGgId);
+                              if (!gg || p.assigned_group_id) return false;
+                              
+                              const isStudentMatch = p.participant_type === '학생' && p.department && gg.included_departments.includes(p.department);
+                              const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
+                              
+                              return !(isStudentMatch || isTeacherMatch);
+                            })
+                            .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+                            .map(p => (
+                              <span
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedMoveParticipantId(p.id);
+                                  setQuickMoveTarget({ 
+                                    id: p.id, 
+                                    name: p.name, 
+                                    currentGid: null, 
+                                    participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
+                                  });
+                                }}
+                                className="bg-white hover:bg-amber-100 cursor-pointer border border-amber-300 text-amber-900 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                                title="클릭하면 바로 현재 조편성 그룹의 조에 배정할 수 있습니다"
+                              >
+                                {p.name} ({p.gender === '남' ? '남' : '여'} / <span className="text-amber-700 font-bold">{p.participant_type === '학생' ? p.department : p.participant_type}</span>)
+                              </span>
+                            ))
+                          }
+                          {targetParticipantsForGrouping.filter(p => {
+                            const gg = groupingGroups.find(x => x.id === activeGgId);
+                            if (!gg || p.assigned_group_id) return false;
+                            const isStudentMatch = p.participant_type === '학생' && p.department && gg.included_departments.includes(p.department);
+                            const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
+                            return !(isStudentMatch || isTeacherMatch);
+                          }).length === 0 && (
+                            <span className="text-[10px] text-slate-400 italic py-1">타 부서 미배정자가 없습니다.</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </>
