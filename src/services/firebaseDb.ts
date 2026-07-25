@@ -920,31 +920,36 @@ export const firebaseDb = {
     return newGroup;
   },
   async deleteGroupingGroup(id: string): Promise<void> {
-    // 메모리에서 삭제할 대상 수집
+    // 1. 메모리에서 삭제할 대상 수집 및 즉시 반영 (Optimistic UI / Local-first)
     const groups = memoryDb.groups.filter(g => g.grouping_group_id === id);
     const groupIds = groups.map(g => g.id);
     const affectedParticipants = memoryDb.participants.filter(
       p => p.assigned_group_id && groupIds.includes(p.assigned_group_id)
     );
 
-    // Firestore batch write로 원자적 삭제 (부분 실패 방지)
-    const batch = writeBatch(dbFirestore);
-    batch.delete(doc(dbFirestore, 'grouping_groups', id));
-    groupIds.forEach(gid => {
-      batch.delete(doc(dbFirestore, 'groups', gid));
-    });
-    affectedParticipants.forEach(p => {
-      batch.update(doc(dbFirestore, 'participants', p.id), { assigned_group_id: null });
-    });
-
-    await batch.commit();
-
-    // Firestore 커밋 성공 후에만 메모리 반영
     memoryDb.groupingGroups = memoryDb.groupingGroups.filter(g => g.id !== id);
     memoryDb.groups = memoryDb.groups.filter(g => g.grouping_group_id !== id);
     affectedParticipants.forEach(p => {
       p.assigned_group_id = null;
     });
+
+    // 2. Firestore 배치 작업 수행 (NOT_FOUND 에러 방지를 위해 batch.set with merge: true 사용 및 안전한 예외 처리)
+    try {
+      const batch = writeBatch(dbFirestore);
+      batch.delete(doc(dbFirestore, 'grouping_groups', id));
+      groupIds.forEach(gid => {
+        batch.delete(doc(dbFirestore, 'groups', gid));
+      });
+      affectedParticipants.forEach(p => {
+        batch.set(doc(dbFirestore, 'participants', p.id), { assigned_group_id: null }, { merge: true });
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error('Error deleting grouping group in Firestore batch:', err);
+      // 배치 실패 시에도 개별 fallback 삭제 시도
+      deleteDoc(doc(dbFirestore, 'grouping_groups', id)).catch(() => {});
+      groupIds.forEach(gid => deleteDoc(doc(dbFirestore, 'groups', gid)).catch(() => {}));
+    }
   },
 
   getGroups(districtId?: string): Group[] {
