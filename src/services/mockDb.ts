@@ -636,6 +636,25 @@ export const mockDb = {
   // --- Participants ---
   getParticipants(districtId?: string): Participant[] {
     const list = this.getData<Participant>('evt_participants');
+    const approvedMgrs = this.getData<ChurchManager>('evt_managers').filter(m => m.status === 'approved');
+    let modified = false;
+    for (const p of list) {
+      const matchedM = approvedMgrs.find(m => 
+        (m.name === p.name && m.phone && p.personal_phone && m.phone === p.personal_phone) || 
+        (m.name === p.name && m.church_id === p.church_id && (p.participant_type === '교사' || p.participant_type === '봉사자' || p.role === '교회담당자'))
+      );
+      if (matchedM) {
+        const mgrGender = matchedM.gender || '여';
+        if (p.gender !== mgrGender) {
+          p.gender = mgrGender;
+          p.updated_at = new Date().toISOString();
+          modified = true;
+        }
+      }
+    }
+    if (modified) {
+      this.setData('evt_participants', list);
+    }
     return districtId ? list.filter(p => p.district_id === districtId) : list;
   },
   getParticipantById(id: string): Participant | undefined {

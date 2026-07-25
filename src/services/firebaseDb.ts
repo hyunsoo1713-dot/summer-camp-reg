@@ -672,6 +672,21 @@ export const firebaseDb = {
 
   // --- Participants ---
   getParticipants(districtId?: string): Participant[] {
+    const approvedMgrs = memoryDb.managers.filter(m => m.status === 'approved');
+    for (const p of memoryDb.participants) {
+      const matchedM = approvedMgrs.find(m => 
+        (m.name === p.name && m.phone && p.personal_phone && m.phone === p.personal_phone) || 
+        (m.name === p.name && m.church_id === p.church_id && (p.participant_type === '교사' || p.participant_type === '봉사자' || p.role === '교회담당자'))
+      );
+      if (matchedM) {
+        const mgrGender = matchedM.gender || '여';
+        if (p.gender !== mgrGender) {
+          p.gender = mgrGender;
+          p.updated_at = new Date().toISOString();
+          setDoc(doc(dbFirestore, 'participants', p.id), p).catch(err => console.error(err));
+        }
+      }
+    }
     return districtId ? memoryDb.participants.filter(p => p.district_id === districtId) : memoryDb.participants;
   },
   getParticipantById(id: string): Participant | undefined {
