@@ -927,7 +927,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     const churchMap = new Map(churches.map(c => [c.id, c.name]));
     const churchName = churchMap.get(p.church_id) || '';
 
-    const matchesSearch = p.name.includes(adminSearch) || churchName.includes(adminSearch);
+    const matchesSearch = (p.name || '').includes(adminSearch) || (churchName || '').includes(adminSearch);
     const matchesChurch = adminFilterChurch ? p.church_id === adminFilterChurch : true;
     const matchesType = adminFilterType ? p.participant_type === adminFilterType : true;
 

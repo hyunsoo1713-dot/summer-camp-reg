@@ -456,8 +456,8 @@ export default function ManagerDashboard() {
 
   // 필터링 적용 리스트
   const filteredParticipants = participants.filter(p => {
-    const matchesSearch = p.name.includes(searchTerm) || 
-      (p.guardian_name && p.guardian_name.includes(searchTerm));
+    const matchesSearch = (p.name || '').includes(searchTerm) || 
+      ((p.guardian_name || '').includes(searchTerm));
     const matchesType = filterType ? p.participant_type === filterType : true;
     const matchesDept = filterDept ? p.department === filterDept : true;
     

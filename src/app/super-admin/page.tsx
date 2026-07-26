@@ -253,7 +253,7 @@ export default function SuperAdminDashboard() {
 
   // 필터링 적용
   const filteredDistricts = districts.filter(d => {
-    const matchesSearch = d.name.includes(searchTerm) || d.manager_name.includes(searchTerm);
+    const matchesSearch = (d.name || '').includes(searchTerm) || (d.manager_name || '').includes(searchTerm);
     const matchesStatus = filterStatus ? d.status === filterStatus : true;
     return matchesSearch && matchesStatus;
   });
