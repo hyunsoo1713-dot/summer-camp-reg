@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
-import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, District, ChurchManager } from '@/types';
+import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, District, ChurchManager, Group } from '@/types';
 import { 
   Users, CreditCard, Copy, Info, CheckCircle, Search, 
   UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt, RefreshCw, Settings, Key, UserCheck
@@ -42,6 +42,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
   // 데이터 목록
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [requests, setRequests] = useState<SameGroupRequest[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   
   // 새로고침 상태 및 핸들러
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -213,6 +214,8 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
       const curMgr = mgrs.find((m: ChurchManager) => m.login_id === curLoginId);
       if (curMgr) setCurrentManager(curMgr);
     }
+    
+    setGroups(db.getGroups(districtId));
   };
 
   const openProfileModal = () => {
@@ -841,7 +844,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         <td className="p-3 text-center">
                           {p.assigned_group_id ? (
                             <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              배정됨
+                              {groups.find(g => g.id === p.assigned_group_id)?.name || '배정됨'}
                             </span>
                           ) : (
                             <span className="bg-slate-100 text-slate-400 text-[10px] px-2 py-0.5 rounded-full">

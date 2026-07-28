@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
-import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, ChurchManager } from '@/types';
+import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, ChurchManager, Group } from '@/types';
 import { 
   Users, CreditCard, Copy, Info, CheckCircle, Search, 
   UserPlus, Edit, Trash2, HelpCircle, LogOut, Check, Grid, Shirt, Settings, Key, UserCheck
@@ -41,6 +41,8 @@ export default function ManagerDashboard() {
 
   // 복사 피드백
   const [copied, setCopied] = useState(false);
+
+  const [groups, setGroups] = useState<Group[]>([]);
 
   // 검색 및 필터 상태
   const [searchTerm, setSearchTerm] = useState('');
@@ -176,6 +178,8 @@ export default function ManagerDashboard() {
       const curMgr = mgrs.find((m: ChurchManager) => m.login_id === curLoginId);
       if (curMgr) setCurrentManager(curMgr);
     }
+    
+    setGroups(db.getGroups());
   };
 
   const openProfileModal = () => {
@@ -788,7 +792,7 @@ export default function ManagerDashboard() {
                         <td className="p-3 text-center">
                           {p.assigned_group_id ? (
                             <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              배정됨
+                              {groups.find(g => g.id === p.assigned_group_id)?.name || '배정됨'}
                             </span>
                           ) : (
                             <span className="bg-slate-100 text-slate-400 text-[10px] px-2 py-0.5 rounded-full">
