@@ -68,7 +68,7 @@ export default function RegisterPage({ params }: PageProps) {
 
     const active = db.getActiveEvent(dist.id);
     if (!active) {
-      alert('진행 중인 성경학교 행사가 없습니다.');
+      alert('진행 중인 행사가 없습니다.');
       router.push(`/district/${districtSlug}`);
       return;
     }
@@ -609,7 +609,7 @@ export default function RegisterPage({ params }: PageProps) {
             <div>
               <span className="font-bold text-indigo-950 block mb-0.5">개인정보 파기 정책 안내</span>
               <p>
-                수집된 참가 아동 및 보호자 개인정보(이름, 연락처, 건강 기록 등)는 성경학교 행사 관리 목적으로만 사용되며, <b>행사 종료 후 30일 이내에 시스템에서 복구 불가능하도록 완전히 영구 파기(Purge)</b> 처리됩니다.
+                수집된 참가자 및 보호자 개인정보(이름, 연락처, 건강 기록 등)는 행사 관리 목적으로만 사용되며, <b>행사 종료 후 30일 이내에 시스템에서 복구 불가능하도록 완전히 영구 파기(Purge)</b> 처리됩니다.
               </p>
             </div>
           </div>

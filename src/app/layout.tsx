@@ -3,14 +3,24 @@ import './globals.css';
 import DbInitializer from '@/components/DbInitializer';
 import PWARegister from '@/components/PWARegister';
 
+const APP_NAME = '모임터';
+
 export const metadata: Metadata = {
-  title: '여름행사 등록 - 교회 연합 행사 등록 및 관리 시스템',
-  description: '교회 연합 여름행사 등록, 참가비 정산, 엑셀 다운로드, 자동 조편성까지 한 번에 처리하는 스마트 반응형 플랫폼',
+  title: '모임터 · 교회 연합 행사 등록',
+  description: '여름성경학교, 겨울 수련회, 세미나 등 교회 연합 행사의 참가 신청, 참가비 정산, 엑셀 명단, 자동 조편성까지 한 번에 처리하는 플랫폼',
+  applicationName: APP_NAME,
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '여름행사등록'
+    title: APP_NAME
+  },
+  openGraph: {
+    siteName: APP_NAME,
+    title: '모임터 · 교회 연합 행사 등록',
+    description: '교회 연합 행사의 참가 신청과 관리를 한 곳에서',
+    type: 'website',
+    locale: 'ko_KR'
   }
 };
 

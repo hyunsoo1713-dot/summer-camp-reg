@@ -6,6 +6,9 @@ const LEGACY_PATHS = ['/admin', '/manager', '/register', '/edit', '/login', '/si
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // 카카오톡·네이버·밴드 등 링크 미리보기 로봇이 행사 제목을 제대로 읽도록, 이 로봇들에게는 제목을 <head>에 바로 넣어 보냅니다.
+  htmlLimitedBots:
+    /kakaotalk-scrap|kakaostory|Daum|Yeti|naver|BAND|facebookexternalhit|Twitterbot|Slackbot|Discordbot|WhatsApp|LinkedInBot|TelegramBot|[\w-]+-Google|Google-[\w-]+|Bingbot|applebot/i,
   async redirects() {
     return LEGACY_PATHS.map(source => ({ source, destination: '/', permanent: false }));
   },

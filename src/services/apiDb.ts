@@ -178,9 +178,9 @@ const INITIAL_PLATFORM_CONFIG: PlatformConfig = {
   support_bank_name: '신한은행',
   support_account_number: '110-111-222222',
   support_account_holder: '홍길동',
-  support_intro_description: '성경학교를 성공적으로 돕기 위해 본 연합 등록 플랫폼은 모두 무상으로 이용하실 수 있도록 개방되어 있습니다. 다만 서버 유지와 서비스 품질 향상을 위하여 자율적으로 후원을 기부받고 있으니 협조와 기도를 부탁드립니다.',
-  platform_intro_title: '전국 지방회 연합 성경학교를 하나의 플랫폼으로 편리하게.',
-  platform_intro_description: '개별 웹사이트를 따로 제작할 필요 없이, 가입 신청 한 번으로 우리 지방회 연합 성경학교만의 독자적인 참가자 수집 및 조편성 관리 화면을 즉시 생성해 드립니다.',
+  support_intro_description: '모임터를 통해 여러 교회가 함께하는 행사를 편리하게 준비하실 수 있도록 무상으로 개방하고 있습니다. 다만 서버 유지와 서비스 품질 향상을 위하여 자율적으로 후원을 받고 있으니 협조와 기도를 부탁드립니다.',
+  platform_intro_title: '교회 연합 행사를 하나의 플랫폼으로 편리하게.',
+  platform_intro_description: '여름성경학교, 겨울 수련회, 세미나 등 어떤 행사든 개별 웹사이트를 따로 만들 필요 없이, 가입 신청 한 번으로 우리 지방회만의 참가 신청 및 조편성 관리 화면을 바로 만들어 드립니다.',
   updated_at: new Date().toISOString()
 };
 
@@ -412,8 +412,8 @@ export const apiDb = {
     const newEvent: Event = {
       id: eventId,
       district_id: dist.id,
-      name: `${dist.name} 여름성경학교`,
-      description: `${dist.name} 어린이들을 위한 연합 성경학교 페이지입니다.`,
+      name: `${dist.name} 연합 행사`,
+      description: `${dist.name} 연합 행사 참가 신청 페이지입니다.`,
       start_date: '2026-08-01',
       end_date: '2026-08-03',
       registration_start_date: '2026-06-01',

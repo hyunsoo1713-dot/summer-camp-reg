@@ -77,7 +77,7 @@ export default function EditPage({ params }: PageProps) {
 
       const active = db.getActiveEvent(dist.id);
       if (!active) {
-        alert('진행 중인 성경학교 행사가 없습니다.');
+        alert('진행 중인 행사가 없습니다.');
         router.push(`/district/${districtSlug}`);
         return;
       }

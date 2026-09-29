@@ -115,7 +115,7 @@ export default function PlatformHomePage() {
   const getSmsHref = () => {
     if (!submittedDistrict) return '#';
     const superAdminPhone = '010-7244-7951'; // 최고 관리자(목사님) 연락처
-    const message = `[여름행사플랫폼] 지방회 개설 신청 완료되었습니다. 승인 부탁드립니다. (지방회명: ${submittedDistrict.name}, 신청자: ${submittedDistrict.manager_name})`;
+    const message = `[모임터] 지방회 개설 신청 완료되었습니다. 승인 부탁드립니다. (지방회명: ${submittedDistrict.name}, 신청자: ${submittedDistrict.manager_name})`;
     // 모바일 브라우저 표준 SMS 스키마 대응
     return `sms:${superAdminPhone}?body=${encodeURIComponent(message)}`;
   };
@@ -146,7 +146,7 @@ export default function PlatformHomePage() {
               ⚠️ 가입 승인 처리에 최대 1~2일이 소요되거나 상황에 따라 약간 지연될 수 있으니 조금만 기다려 주시기 바랍니다.
             </p>
             <p className="text-slate-500 font-medium pt-2 border-t border-slate-200 text-[10px]">
-              🔒 개인정보 보호 방침: 연합 성경학교 행사가 정상 종료된 후, 아동 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단 및 조편성 데이터는 행사 마감 후 30일 이내에 영구 파기(Purge)됩니다.
+              🔒 개인정보 보호 방침: 연합 행사가 정상 종료된 후, 참가자 및 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단 및 조편성 데이터는 행사 마감 후 30일 이내에 영구 파기(Purge)됩니다.
             </p>
           </div>
 
@@ -157,7 +157,7 @@ export default function PlatformHomePage() {
               자율 기부/후원 안내
             </p>
             <p className="text-[11px] text-slate-600 leading-relaxed">
-              {config ? config.support_intro_description : '본 플랫폼은 여름 연합 성경학교를 지원하기 위해 무료 및 자율 후원 구좌로 운영됩니다. 플랫폼 발전과 계속된 운영을 지원해주실 교회 및 개인께서는 후원에 동참해주시면 감사하겠습니다.'}
+              {config ? config.support_intro_description : '모임터는 교회 연합 행사를 지원하기 위해 무료 및 자율 후원 구좌로 운영됩니다. 플랫폼 발전과 계속된 운영을 지원해주실 교회 및 개인께서는 후원에 동참해주시면 감사하겠습니다.'}
             </p>
             <div 
               onClick={() => handleCopyAccount(config?.support_bank_name || '신한은행', config?.support_account_number || '110-111-222222')}
@@ -204,9 +204,9 @@ export default function PlatformHomePage() {
       <header className="w-full max-w-4xl mx-auto px-6 py-5 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-            연
+            모
           </div>
-          <span className="font-bold text-slate-800 text-lg">교회 연합 여름 성경학교 플랫폼</span>
+          <span className="font-bold text-slate-800 text-lg">모임터 <span className="font-medium text-slate-500 text-sm">· 교회 연합 행사 등록</span></span>
         </div>
         <div>
           <Link
@@ -229,10 +229,10 @@ export default function PlatformHomePage() {
               SaaS Multi-tenancy Platform
             </span>
             <h1 className="text-3xl font-black text-slate-900 leading-tight">
-              {config ? config.platform_intro_title : '전국 지방회 연합 성경학교를 하나의 플랫폼으로 편리하게.'}
+              {config ? config.platform_intro_title : '교회 연합 행사를 하나의 플랫폼으로 편리하게.'}
             </h1>
             <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-              {config ? config.platform_intro_description : '개별 웹사이트를 따로 제작할 필요 없이, 가입 신청 한 번으로 우리 지방회 연합 성경학교만의 독자적인 참가자 수집 및 조편성 관리 화면을 즉시 생성해 드립니다.'}
+              {config ? config.platform_intro_description : '여름성경학교, 겨울 수련회, 세미나 등 어떤 행사든 개별 웹사이트를 따로 만들 필요 없이, 가입 신청 한 번으로 우리 지방회만의 참가 신청 및 조편성 관리 화면을 바로 만들어 드립니다.'}
             </p>
           </div>
 
@@ -275,7 +275,7 @@ export default function PlatformHomePage() {
               자율 기부 헌금(자율 후원) 안내
             </h3>
             <p className="text-[11px] text-slate-600 leading-relaxed">
-              {config ? config.support_intro_description : '성경학교를 성공적으로 돕기 위해 본 연합 등록 플랫폼은 모두 무상으로 이용하실 수 있도록 개방되어 있습니다. 다만 서버 유지와 서비스 품질 향상을 위하여 자율적으로 후원을 기부받고 있으니 협조와 기도를 부탁드립니다.'}
+              {config ? config.support_intro_description : '모임터를 통해 여러 교회가 함께하는 행사를 편리하게 준비하실 수 있도록 무상으로 개방하고 있습니다. 다만 서버 유지와 서비스 품질 향상을 위하여 자율적으로 후원을 받고 있으니 협조와 기도를 부탁드립니다.'}
             </p>
             <div 
               onClick={() => handleCopyAccount(config?.support_bank_name || '신한은행', config?.support_account_number || '110-111-222222')}
@@ -432,13 +432,13 @@ export default function PlatformHomePage() {
             className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition-all-custom mt-2 text-xs text-center shadow-lg shadow-slate-100 flex items-center justify-center gap-1.5"
           >
             <PlusCircle className="w-4 h-4" />
-            연합 성경학교 전용 사이트 개설 신청
+            우리 지방회 전용 행사 사이트 개설 신청
           </button>
 
           <div className="flex items-start gap-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100 mt-2 text-[10px] text-slate-500 leading-normal">
             <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
             <p>
-              성경학교 등록 플랫폼은 무료 및 자율 후원금으로 운영되며, <b>개인정보 보호법 준수 및 서버 디스크 용량 관리</b>를 위해 행사 종료일로부터 30일 경과 시 참가 아동 및 보호자 개인정보는 시스템상에서 <b>영구 완전 파기(Purge)</b>됩니다.
+              모임터는 무료 및 자율 후원금으로 운영되며, <b>개인정보 보호법 준수 및 서버 디스크 용량 관리</b>를 위해 행사 종료일로부터 30일 경과 시 참가자 및 보호자 개인정보는 시스템상에서 <b>영구 완전 파기(Purge)</b>됩니다.
             </p>
           </div>
         </form>
@@ -446,7 +446,7 @@ export default function PlatformHomePage() {
 
       {/* Footer */}
       <footer className="w-full py-8 text-center text-xs text-slate-400 mt-auto border-t border-slate-150">
-        &copy; {new Date().getFullYear()} 교회 연합 여름 성경학교 지원 플랫폼. All rights reserved.
+        &copy; {new Date().getFullYear()} 모임터 · 교회 연합 행사 등록 플랫폼. All rights reserved.
       </footer>
     </div>
   );

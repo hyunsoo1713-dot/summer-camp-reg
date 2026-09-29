@@ -570,7 +570,7 @@ export default function SuperAdminDashboard() {
                   value={platformIntroTitle}
                   onChange={e => setPlatformIntroTitle(e.target.value)}
                   className="w-full bg-slate-850 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                  placeholder="예: 전국 지방회 연합 성경학교를 하나의 플랫폼으로 편리하게."
+                  placeholder="예: 교회 연합 행사를 하나의 플랫폼으로 편리하게."
                 />
               </div>
 

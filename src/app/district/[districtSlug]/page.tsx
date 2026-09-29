@@ -244,7 +244,7 @@ export default function DistrictHomePage({ params }: PageProps) {
           <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center flex flex-col gap-4">
             <Info className="w-12 h-12 text-slate-400 mx-auto" />
             <div>
-              <p className="text-slate-600 font-semibold">아직 예정된 여름행사가 없습니다.</p>
+              <p className="text-slate-600 font-semibold">아직 예정된 행사가 없습니다.</p>
               <p className="text-slate-400 text-xs mt-1">지방회 관리자 계정으로 로그인해 행사를 생성해 주세요.</p>
             </div>
             <div className="mt-2 flex justify-center">
