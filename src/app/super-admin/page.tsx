@@ -306,7 +306,7 @@ export default function SuperAdminDashboard() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-white">SaaS 플랫폼 최고 관리자 포털</h1>
-            <p className="text-[10px] text-slate-400 font-medium">전체 지방회 연합 가입 건 및 격리 데이터 총괄 제어</p>
+            <p className="text-[13px] text-slate-400 font-medium">전체 지방회 연합 가입 건 및 격리 데이터 총괄 제어</p>
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
@@ -360,23 +360,23 @@ export default function SuperAdminDashboard() {
         {/* 통계 요약 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col gap-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase">전체 신청 지방회</span>
+            <span className="text-[13px] text-slate-400 font-bold uppercase">전체 신청 지방회</span>
             <span className="text-2xl font-black text-white">{districts.length}개</span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col gap-1">
-            <span className="text-[10px] text-yellow-400 font-bold uppercase">승인 대기 건</span>
+            <span className="text-[13px] text-yellow-400 font-bold uppercase">승인 대기 건</span>
             <span className="text-2xl font-black text-yellow-400">
               {districts.filter(d => d.status === 'pending').length}개
             </span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col gap-1">
-            <span className="text-[10px] text-emerald-400 font-bold uppercase">승인 완료 건</span>
+            <span className="text-[13px] text-emerald-400 font-bold uppercase">승인 완료 건</span>
             <span className="text-2xl font-black text-emerald-400">
               {districts.filter(d => d.status === 'approved').length}개
             </span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col gap-1">
-            <span className="text-[10px] text-rose-400 font-bold uppercase">반려 건</span>
+            <span className="text-[13px] text-rose-400 font-bold uppercase">반려 건</span>
             <span className="text-2xl font-black text-rose-400">
               {districts.filter(d => d.status === 'rejected').length}개
             </span>
@@ -437,7 +437,7 @@ export default function SuperAdminDashboard() {
                       <td className="p-4 font-semibold">{d.manager_name}</td>
                       <td className="p-4 font-mono">{d.phone}</td>
                       <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 w-fit ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-bold flex items-center gap-1 w-fit ${
                           d.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                           d.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
                           'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
@@ -448,7 +448,7 @@ export default function SuperAdminDashboard() {
                           {d.status === 'approved' ? '승인완료' : d.status === 'rejected' ? '반려됨' : '대기중'}
                         </span>
                       </td>
-                      <td className="p-4 text-slate-500 text-[10px]">
+                      <td className="p-4 text-slate-500 text-[13px]">
                         {d.created_at ? new Date(d.created_at).toLocaleDateString() : '-'}
                       </td>
                       <td className="p-4 text-center">
@@ -458,20 +458,20 @@ export default function SuperAdminDashboard() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => openConfirmModal('approve', d.id, d.name)}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] shadow-sm transition-all-custom approve-btn"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-[13px] shadow-sm transition-all-custom approve-btn"
                                 >
                                   가입 승인
                                 </button>
                                 <button
                                   onClick={() => openConfirmModal('reject', d.id, d.name)}
-                                  className="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-semibold py-1.5 px-3 rounded-lg text-[10px] border border-rose-800/30 transition-all-custom reject-btn"
+                                  className="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-semibold py-1.5 px-3 rounded-lg text-[13px] border border-rose-800/30 transition-all-custom reject-btn"
                                 >
                                   반려
                                 </button>
                               </div>
                               <button
                                 onClick={() => openConfirmModal('delete_district', d.id, d.name)}
-                                className="text-[9px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
+                                className="text-[12px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
                               >
                                 신청 삭제
                               </button>
@@ -482,27 +482,27 @@ export default function SuperAdminDashboard() {
                               return (
                                 <div className="flex flex-col items-center gap-1.5">
                                   {purgeStatus.isPurged ? (
-                                    <span className="text-[10px] text-slate-400 font-semibold bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 block">
+                                    <span className="text-[13px] text-slate-400 font-semibold bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 block">
                                       정리 완료 (개인정보 파기)
                                     </span>
                                   ) : purgeStatus.showPurge ? (
                                     <>
-                                      <span className="text-[9px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 block animate-pulse">
+                                      <span className="text-[12px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 block animate-pulse">
                                         종료 {purgeStatus.daysPast}일 경과 (정리 권장)
                                       </span>
                                       <button
                                         onClick={() => openConfirmModal('purge', d.id, d.name)}
-                                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1 px-2.5 rounded text-[9px] shadow-sm transition-all-custom purge-btn"
+                                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1 px-2.5 rounded text-[12px] shadow-sm transition-all-custom purge-btn"
                                       >
                                         개인정보 영구 정리
                                       </button>
                                     </>
                                   ) : (
-                                    <span className="text-[10px] text-emerald-400 font-medium">정상 운영 중</span>
+                                    <span className="text-[13px] text-emerald-400 font-medium">정상 운영 중</span>
                                   )}
                                   <button
                                     onClick={() => openConfirmModal('delete_district', d.id, d.name)}
-                                    className="text-[9px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
+                                    className="text-[12px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
                                   >
                                     계정 삭제
                                   </button>
@@ -511,10 +511,10 @@ export default function SuperAdminDashboard() {
                             })()
                           ) : (
                             <div className="flex flex-col items-center gap-1.5">
-                              <span className="text-[10px] text-slate-500 font-medium">반려됨</span>
+                              <span className="text-[13px] text-slate-500 font-medium">반려됨</span>
                               <button
                                 onClick={() => openConfirmModal('delete_district', d.id, d.name)}
-                                className="text-[9px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
+                                className="text-[12px] text-slate-500 hover:text-rose-400 transition-all-custom font-semibold delete-district-btn"
                               >
                                 기록 삭제
                               </button>
@@ -527,13 +527,13 @@ export default function SuperAdminDashboard() {
                           <Link
                             href={`/district/${d.slug}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-all-custom"
+                            className="inline-flex items-center gap-1 text-[13px] text-indigo-400 hover:text-indigo-300 font-bold transition-all-custom"
                           >
                             바로가기
                             <ArrowRight className="w-3 h-3" />
                           </Link>
                         ) : (
-                          <span className="text-slate-600 text-[10px]">-</span>
+                          <span className="text-slate-600 text-[13px]">-</span>
                         )}
                       </td>
                     </tr>
@@ -564,7 +564,7 @@ export default function SuperAdminDashboard() {
             <div className="flex flex-col gap-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">1. 플랫폼 대문 소개글 설정</h3>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase">메인 타이틀 제목</label>
+                <label className="text-[13px] font-bold text-slate-300 uppercase">메인 타이틀 제목</label>
                 <input
                   type="text"
                   value={platformIntroTitle}
@@ -575,7 +575,7 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase">소개 상세 설명글</label>
+                <label className="text-[13px] font-bold text-slate-300 uppercase">소개 상세 설명글</label>
                 <textarea
                   value={platformIntroDescription}
                   onChange={e => setPlatformIntroDescription(e.target.value)}
@@ -592,7 +592,7 @@ export default function SuperAdminDashboard() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">2. 자율 후원금 수납 계좌 설정</h3>
               
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase">자율 후원 안내 설명글</label>
+                <label className="text-[13px] font-bold text-slate-300 uppercase">자율 후원 안내 설명글</label>
                 <textarea
                   value={supportIntroDescription}
                   onChange={e => setSupportIntroDescription(e.target.value)}
@@ -603,7 +603,7 @@ export default function SuperAdminDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase">은행명</label>
+                  <label className="text-[13px] font-bold text-slate-300 uppercase">은행명</label>
                   <input
                     type="text"
                     value={supportBankName}
@@ -613,7 +613,7 @@ export default function SuperAdminDashboard() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase">계좌번호</label>
+                  <label className="text-[13px] font-bold text-slate-300 uppercase">계좌번호</label>
                   <input
                     type="text"
                     value={supportAccountNumber}
@@ -623,7 +623,7 @@ export default function SuperAdminDashboard() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase">예금주</label>
+                  <label className="text-[13px] font-bold text-slate-300 uppercase">예금주</label>
                   <input
                     type="text"
                     value={supportAccountHolder}
@@ -653,7 +653,7 @@ export default function SuperAdminDashboard() {
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-300 uppercase">현재 비밀번호</label>
+                <label className="text-[13px] font-bold text-slate-300 uppercase">현재 비밀번호</label>
                 <input
                   type="password"
                   value={currentPw}
@@ -665,7 +665,7 @@ export default function SuperAdminDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase">새 비밀번호</label>
+                  <label className="text-[13px] font-bold text-slate-300 uppercase">새 비밀번호</label>
                   <input
                     type="password"
                     value={newPw}
@@ -675,7 +675,7 @@ export default function SuperAdminDashboard() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-300 uppercase">새 비밀번호 확인</label>
+                  <label className="text-[13px] font-bold text-slate-300 uppercase">새 비밀번호 확인</label>
                   <input
                     type="password"
                     value={newPwConfirm}

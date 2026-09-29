@@ -133,7 +133,7 @@ export default function DistrictHomePage({ params }: PageProps) {
                   />
                 </div>
                 <div className="text-center">
-                  <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50/80 px-3 py-1.5 rounded-full inline-block shadow-sm">
+                  <span className="text-[14px] font-bold text-indigo-600 bg-indigo-50/80 px-3 py-1.5 rounded-full inline-block shadow-sm">
                     🔍 {event.notice_image_caption || ((event.notice_image_urls && event.notice_image_urls.length > 1) ? "클릭하면 가정통신문과 시간표도 볼 수 있습니다." : "클릭하면 상세 안내를 크게 볼 수 있습니다.")}
                   </span>
                 </div>

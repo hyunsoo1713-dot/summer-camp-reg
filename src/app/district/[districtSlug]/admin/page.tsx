@@ -858,7 +858,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           ? <ChevronUp className="w-3.5 h-3.5 text-indigo-600 font-bold" />
           : <ChevronDown className="w-3.5 h-3.5 text-indigo-600 font-bold" />}
         {sortKeys.length > 1 && (
-          <span className="text-[9px] font-bold text-indigo-500 leading-none">{keyIndex + 1}</span>
+          <span className="text-[12px] font-bold text-indigo-500 leading-none">{keyIndex + 1}</span>
         )}
       </span>
     );
@@ -1349,7 +1349,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           <div>
             <h1 className="text-lg font-bold tracking-tight">{district.name} 연합 본부 관리</h1>
             <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-3 mt-0.5">
-              <p className="text-[10px] text-indigo-300 font-medium">
+              <p className="text-[13px] text-indigo-300 font-medium">
                 {event ? `활성 행사: ${event.name}` : '진행 중인 행사가 없습니다. 첫 행사를 등록해 주세요.'}
               </p>
               <div 
@@ -1358,7 +1358,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   navigator.clipboard.writeText(shareUrl);
                   alert('참가 신청 주소가 클립보드에 복사되었습니다!\n학부모 및 개별 교회 담당자들에게 공유하세요.');
                 }}
-                className="flex items-center gap-1 bg-indigo-900/50 hover:bg-indigo-900 border border-indigo-800/80 px-2 py-0.5 rounded text-[9px] text-indigo-200 cursor-pointer transition-colors w-fit font-mono"
+                className="flex items-center gap-1 bg-indigo-900/50 hover:bg-indigo-900 border border-indigo-800/80 px-2 py-0.5 rounded text-[12px] text-indigo-200 cursor-pointer transition-colors w-fit font-mono"
                 title="클릭하면 참가 신청 주소가 복사됩니다"
               >
                 <Copy className="w-2.5 h-2.5 text-indigo-400" />
@@ -1458,7 +1458,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <div className="flex flex-col gap-2.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-800">세부 일차별 참석 날짜 구성</span>
-                  <span className="text-[10px] text-slate-400">학부모가 신청할 때 선택할 수 있는 개별 참석 일자 목록입니다. 비연속적인 날짜도 자유롭게 추가할 수 있습니다.</span>
+                  <span className="text-[13px] text-slate-400">학부모가 신청할 때 선택할 수 있는 개별 참석 일자 목록입니다. 비연속적인 날짜도 자유롭게 추가할 수 있습니다.</span>
                 </div>
                 
                 {/* 기존 목록 */}
@@ -1475,36 +1475,36 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           onClick={() => {
                             setAttendanceDates(attendanceDates.filter((_, i) => i !== idx));
                           }}
-                          className="text-[10px] text-rose-500 hover:text-rose-700 font-bold hover:underline"
+                          className="text-[13px] text-rose-500 hover:text-rose-700 font-bold hover:underline"
                         >
                           삭제
                         </button>
                       </div>
                     ))
                   ) : (
-                    <span className="text-[11px] text-slate-400 italic py-2 text-center">등록된 세부 참석 날짜가 없습니다. 날짜를 추가해 주세요.</span>
+                    <span className="text-[14px] text-slate-400 italic py-2 text-center">등록된 세부 참석 날짜가 없습니다. 날짜를 추가해 주세요.</span>
                   )}
                 </div>
 
                 {/* 추가 폼 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-500">날짜 선택</label>
+                    <label className="text-[13px] font-bold text-slate-500">날짜 선택</label>
                     <input
                       type="date"
                       value={newAttDate}
                       onChange={e => handleDateChange(e.target.value)}
-                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"
+                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[14px] font-bold"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-500">라벨 (예: 1일차, 8/8 토)</label>
+                    <label className="text-[13px] font-bold text-slate-500">라벨 (예: 1일차, 8/8 토)</label>
                     <input
                       type="text"
                       value={newAttLabel}
                       placeholder="예: 3일차 (8/8 토)"
                       onChange={e => setNewAttLabel(e.target.value)}
-                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"
+                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[14px] font-bold"
                     />
                   </div>
                   <div className="flex items-end">
@@ -1569,7 +1569,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <h4 className="font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-1">
                   <span>가정통신문(행사 안내) 다중 이미지 설정</span>
                 </h4>
-                <p className="text-[10px] text-slate-400">학부모 접수 화면에서 메인 포스터와 함께 옆으로 넘겨볼 수 있는 가정통신문, 시간표 등의 이미지를 여러 장 등록할 수 있습니다.</p>
+                <p className="text-[13px] text-slate-400">학부모 접수 화면에서 메인 포스터와 함께 옆으로 넘겨볼 수 있는 가정통신문, 시간표 등의 이미지를 여러 장 등록할 수 있습니다.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
@@ -1584,7 +1584,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     <span className="text-xs text-slate-500 font-semibold group-hover:text-indigo-600 transition-colors">
                       클릭하거나 이미지 파일을 여기에 드래그앤드롭
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[13px] text-slate-400">
                       최대 용량 5MB 이하 (5MB 초과 시 자동으로 압축되어 업로드됩니다)
                     </span>
                   </div>
@@ -1612,7 +1612,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       추가
                     </button>
                   </div>
-                  <span className="text-[10px] text-slate-400 leading-relaxed">
+                  <span className="text-[13px] text-slate-400 leading-relaxed">
                     웹에 업로드된 외부 이미지 주소가 있는 경우, 주소를 입력한 후 [추가] 버튼을 눌러 등록해주세요.
                   </span>
                 </div>
@@ -1628,7 +1628,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   placeholder="예: 클릭하면 가정통신문과 시간표도 볼 수 있습니다."
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-bold"
                 />
-                <p className="text-[10px] text-slate-400">이미지 하단에 노출될 설명 문구입니다. (비워둘 시 기본값으로 노출됩니다)</p>
+                <p className="text-[13px] text-slate-400">이미지 하단에 노출될 설명 문구입니다. (비워둘 시 기본값으로 노출됩니다)</p>
               </div>
 
               {noticeImageUrls.length > 0 && (
@@ -1644,7 +1644,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             className="max-h-full object-contain"
                           />
                         </div>
-                        <div className="flex justify-between items-center text-[10px] px-1 font-bold text-slate-500">
+                        <div className="flex justify-between items-center text-[13px] px-1 font-bold text-slate-500">
                           <span>{index === 0 ? '대표(포스터)' : `${index + 1}번 이미지`}</span>
                           <div className="flex gap-1.5">
                             <button
@@ -1782,15 +1782,15 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                     <button
                       type="button"
                       onClick={() => setActiveDepartments(ALL_DEPARTMENTS)}
-                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"
+                      className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800"
                     >
                       전체 활성화
                     </button>
-                    <span className="text-slate-300 text-[10px]">|</span>
+                    <span className="text-slate-300 text-[13px]">|</span>
                     <button
                       type="button"
                       onClick={() => setActiveDepartments([])}
-                      className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
+                      className="text-[13px] font-bold text-slate-500 hover:text-slate-700"
                     >
                       전체 비활성화
                     </button>
@@ -1799,7 +1799,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 
                 {/* 영유아/유치부 */}
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-bold text-slate-500">영유아·유치부</span>
+                  <span className="text-[14px] font-bold text-slate-500">영유아·유치부</span>
                   <div className="flex flex-wrap gap-2">
                     {['유아부', '유치부'].map(d => {
                       const isActive = activeDepartments.includes(d);
@@ -1831,7 +1831,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 {/* 초등부 */}
                 <div className="flex flex-col gap-1.5 mt-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-bold text-slate-500">초등부</span>
+                    <span className="text-[14px] font-bold text-slate-500">초등부</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1843,7 +1843,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
                         }
                       }}
-                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                      className="text-[12px] font-bold text-indigo-500 hover:underline"
                     >
                       초등부 ON/OFF
                     </button>
@@ -1879,7 +1879,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 {/* 중등부 */}
                 <div className="flex flex-col gap-1.5 mt-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-bold text-slate-500">중등부</span>
+                    <span className="text-[14px] font-bold text-slate-500">중등부</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1891,7 +1891,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
                         }
                       }}
-                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                      className="text-[12px] font-bold text-indigo-500 hover:underline"
                     >
                       중등부 ON/OFF
                     </button>
@@ -1927,7 +1927,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 {/* 고등부 */}
                 <div className="flex flex-col gap-1.5 mt-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-bold text-slate-500">고등부</span>
+                    <span className="text-[14px] font-bold text-slate-500">고등부</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1939,7 +1939,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           setActiveDepartments(prev => Array.from(new Set([...prev, ...depts])));
                         }
                       }}
-                      className="text-[9px] font-bold text-indigo-500 hover:underline"
+                      className="text-[12px] font-bold text-indigo-500 hover:underline"
                     >
                       고등부 ON/OFF
                     </button>
@@ -1982,7 +1982,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                   placeholder="예: 2020년, 2021년, 2022년, 2023년, 2024년"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs input-focus-ring font-bold"
                 />
-                <p className="text-[10px] text-slate-400">신청서와 수정 신청서의 유아부/유치부 출생년도 항목에 노출될 옵션 목록입니다. 쉼표(,)로 구분하여 연도 순서대로 입력해주세요.</p>
+                <p className="text-[13px] text-slate-400">신청서와 수정 신청서의 유아부/유치부 출생년도 항목에 노출될 옵션 목록입니다. 쉼표(,)로 구분하여 연도 순서대로 입력해주세요.</p>
               </div>
 
               <div className="border-t border-slate-200 my-2"></div>
@@ -2061,16 +2061,16 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-center text-xs">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">전체 등록 인원</span>
+                    <span className="text-[13px] text-slate-500 block">전체 등록 인원</span>
                     <span className="text-lg font-black text-slate-800 mt-0.5 block">{totalRegs}명</span>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <span className="text-[10px] text-slate-500 block">참여 교회 수</span>
+                    <span className="text-[13px] text-slate-500 block">참여 교회 수</span>
                     <span className="text-lg font-black text-slate-800 mt-0.5 block">{churches.length}개</span>
                   </div>
                 </div>
                 <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center">
-                  <span className="text-[10px] text-indigo-700 block font-semibold">총 예상 수납액</span>
+                  <span className="text-[13px] text-indigo-700 block font-semibold">총 예상 수납액</span>
                   <span className="text-xl font-black text-indigo-950 mt-1 block">
                     {totalExpectedAmount.toLocaleString()}원
                   </span>
@@ -2141,7 +2141,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
                 {district.name} 교회 담당자 가입 승인 대기 목록
                 {pendingManagers.length > 0 && (
-                  <span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <span className="bg-rose-100 text-rose-700 text-[13px] font-bold px-2 py-0.5 rounded-full">
                     {pendingManagers.length}건
                   </span>
                 )}
@@ -2169,7 +2169,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           </td>
                           <td className="p-3">{m.phone}</td>
                           <td className="p-3">
-                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">
+                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[13px]">
                               {m.shirt_size || '-'}
                             </span>
                           </td>
@@ -2178,13 +2178,13 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             <div className="flex justify-center gap-2">
                               <button
                                 onClick={() => handleApproveManager(m)}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-[10px]"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-[13px]"
                               >
                                 승인
                               </button>
                               <button
                                 onClick={() => handleRejectManager(m.id)}
-                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1.5 px-3 rounded-lg text-[10px] border border-rose-200"
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1.5 px-3 rounded-lg text-[13px] border border-rose-200"
                               >
                                 반려
                               </button>
@@ -2208,7 +2208,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 <Users className="w-4 h-4 text-indigo-600" />
                 지방회/교회 담당자 회원 목록
                 {approvedManagers.length > 0 && (
-                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <span className="bg-indigo-50 text-indigo-700 text-[13px] font-bold px-2 py-0.5 rounded-full">
                     {approvedManagers.length}명
                   </span>
                 )}
@@ -2236,12 +2236,12 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           </td>
                           <td className="p-3">
                             {(m.is_admin ?? (m.church_id === '')) ? (
-                              <span className="text-slate-400 text-[10px]">-</span>
+                              <span className="text-slate-400 text-[13px]">-</span>
                             ) : (
                               <select
                                 value={m.shirt_size || ''}
                                 onChange={(e) => handleUpdateManagerShirtSize(m.id, e.target.value)}
-                                className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold"
+                                className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold"
                               >
                                 <option value="">-미선택-</option>
                                 {options.shirtSizes.map(s => (
@@ -2258,7 +2258,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                 <select
                                   value={m.church_id}
                                   onChange={(e) => handleUpdateManagerChurch(m.id, e.target.value)}
-                                  className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                                  className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[13px] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
                                 >
                                   <option value="">-- 소속 교회 선택 --</option>
                                   {churches.map(c => (
@@ -2270,7 +2270,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                               <button
                                 type="button"
                                 onClick={() => openEditManagerModal(m)}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1 px-2.5 rounded border border-indigo-200 text-[10px] transition-all-custom flex items-center gap-1"
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1 px-2.5 rounded border border-indigo-200 text-[13px] transition-all-custom flex items-center gap-1"
                                 title="담당자 정보 수정"
                               >
                                 <Edit className="w-3 h-3" />
@@ -2281,7 +2281,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteManager(m.id, m.name)}
-                                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[10px] transition-all-custom ml-1"
+                                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-1 px-2.5 rounded border border-rose-200 text-[13px] transition-all-custom ml-1"
                                 >
                                   삭제
                                 </button>
@@ -2402,7 +2402,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                               {(statusRecord?.total_amount || 0).toLocaleString()}원
                             </td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-[13px] font-bold ${
                                 statusRecord?.status === '납부완료' ? 'bg-emerald-50 text-emerald-700' :
                                 statusRecord?.status === '확인 필요' ? 'bg-yellow-50 text-yellow-700' :
                                 'bg-slate-100 text-slate-500'
@@ -2416,7 +2416,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                   <button
                                     key={st}
                                     onClick={() => handleUpdatePaymentStatus(church.id, st, statusRecord?.memo || '')}
-                                    className={`px-1.5 py-1 text-[9px] font-bold rounded transition-all-custom ${
+                                    className={`px-1.5 py-1 text-[12px] font-bold rounded transition-all-custom ${
                                       statusRecord?.status === st 
                                         ? 'bg-slate-800 text-white'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -2516,7 +2516,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 {feeOverrides.map(fo => {
                   const ch = churches.find(c => c.id === fo.church_id);
                   return (
-                    <div key={fo.id} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-slate-700 flex items-center gap-2">
+                    <div key={fo.id} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-[14px] font-semibold text-slate-700 flex items-center gap-2">
                       <span>{ch?.name || '-'}: {fo.participant_type} → {fo.fee.toLocaleString()}원</span>
                       <button
                         onClick={() => {
@@ -2728,7 +2728,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                           <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{p.name}</td>
                           <td className="p-3 font-semibold text-indigo-600">{ch?.name || '-'}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold mr-1 ${
+                            <span className={`px-2 py-0.5 rounded text-[13px] font-bold mr-1 ${
                               p.participant_type === '학생' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
                             }`}>
                               {p.participant_type}
@@ -2797,7 +2797,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               
               <form onSubmit={handleCreateGroupingGroup} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">그룹명 (예: 유치부)</label>
+                  <label className="text-[13px] font-bold text-slate-500 uppercase">그룹명 (예: 유치부)</label>
                   <input
                     type="text"
                     value={newGgName}
@@ -2808,7 +2808,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">조 개수</label>
+                  <label className="text-[13px] font-bold text-slate-500 uppercase">조 개수</label>
                   <input
                     type="number"
                     value={ggGroupCount}
@@ -2818,7 +2818,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">조당 인원 수</label>
+                  <label className="text-[13px] font-bold text-slate-500 uppercase">조당 인원 수</label>
                   <input
                     type="number"
                     value={ggTargetSize}
@@ -2839,7 +2839,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
                 {/* 포함할 부서 학년 선택 */}
                 <div className="md:col-span-4 flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">포함할 부서 / 학년 선택</label>
+                  <label className="text-[13px] font-bold text-slate-500 uppercase">포함할 부서 / 학년 선택</label>
                   <div className="flex flex-wrap gap-1.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                     {options.departments.map(d => {
                       const isChecked = selectedGgDeps.includes(d);
@@ -2869,7 +2869,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
                 {/* 조편성 제약 조건 */}
                 <div className="md:col-span-4 flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">알고리즘 배정 제약 사항</label>
+                  <label className="text-[13px] font-bold text-slate-500 uppercase">알고리즘 배정 제약 사항</label>
                   <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-600">
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={optGender} onChange={e => setOptGender(e.target.checked)} className="rounded" />
@@ -2931,17 +2931,17 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                        <p className="text-[13px] text-slate-500 leading-relaxed">
                           부서: {gg.included_departments.join(', ')}
                         </p>
                         <div className="flex justify-between items-center mt-1.5">
-                          <span className="text-[10px] text-slate-400">설정 조 개수: {gg.group_count}개</span>
+                          <span className="text-[13px] text-slate-400">설정 조 개수: {gg.group_count}개</span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRunAutoGrouping(gg);
                             }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-lg text-[9px] transition-all-custom"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-lg text-[12px] transition-all-custom"
                           >
                             자동 조편성 기동
                           </button>
@@ -3030,7 +3030,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             <div key={group.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-2">
                               <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                                 <span className="font-black text-slate-800 text-xs">{group.name}</span>
-                                <span className="text-[10px] text-slate-400 font-bold">{members.length}명 배정됨</span>
+                                <span className="text-[13px] text-slate-400 font-bold">{members.length}명 배정됨</span>
                               </div>
                               <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto mt-1">
                                 {members.map(m => (
@@ -3045,12 +3045,12 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                         participantType: m.participant_type === '학생' ? (m.department || '학생') : m.participant_type 
                                       });
                                     }}
-                                    className="flex justify-between items-center text-[10px] bg-white border border-slate-100 hover:bg-indigo-50/80 hover:border-indigo-300 cursor-pointer p-2 rounded-lg transition-all-custom shadow-sm group"
+                                    className="flex justify-between items-center text-[13px] bg-white border border-slate-100 hover:bg-indigo-50/80 hover:border-indigo-300 cursor-pointer p-2 rounded-lg transition-all-custom shadow-sm group"
                                     title="클릭하면 즉시 다른 조로 배정/이동할 수 있습니다"
                                   >
                                     <span className="font-bold text-slate-900 group-hover:text-indigo-900">
                                       {m.name} ({m.gender})
-                                      <span className="text-[8px] text-slate-400 ml-1 group-hover:text-indigo-500 font-medium">
+                                      <span className="text-[12px] text-slate-400 ml-1 group-hover:text-indigo-500 font-medium">
                                         {m.participant_type === '학생' ? m.department : m.participant_type}
                                       </span>
                                     </span>
@@ -3058,7 +3058,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                   </div>
                                 ))}
                                 {members.length === 0 && (
-                                  <span className="text-[10px] text-slate-400 italic text-center py-4">조원이 없습니다.</span>
+                                  <span className="text-[13px] text-slate-400 italic text-center py-4">조원이 없습니다.</span>
                                 )}
                               </div>
                             </div>
@@ -3098,7 +3098,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                     participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
                                   });
                                 }}
-                                className="bg-white hover:bg-rose-100 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                                className="bg-white hover:bg-rose-100 cursor-pointer border border-rose-200 text-rose-700 font-semibold px-2.5 py-1.5 rounded-lg text-[13px] transition-all-custom flex items-center gap-1 shadow-sm"
                                 title="클릭하면 바로 조에 배정할 수 있습니다"
                               >
                                 {p.name} ({p.gender === '남' ? '남' : '여'})
@@ -3112,7 +3112,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
                             return (isStudentMatch || isTeacherMatch) && !p.assigned_group_id;
                           }).length === 0 && (
-                            <span className="text-[10px] text-slate-400 italic py-1">본 그룹 대상 미배정자가 없습니다.</span>
+                            <span className="text-[13px] text-slate-400 italic py-1">본 그룹 대상 미배정자가 없습니다.</span>
                           )}
                         </div>
                       </div>
@@ -3124,7 +3124,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             💡 타 부서 미배정 참가자 (자유 배정 가능)
                           </h4>
                         </div>
-                        <p className="text-[10px] text-slate-500 mb-2.5 leading-relaxed">
+                        <p className="text-[13px] text-slate-500 mb-2.5 leading-relaxed">
                           장애 아동이나 돌봄 필요 등으로 인해 실제 부서(학년) 정보를 변경하지 않고 현재 조에 배정해야 할 경우, 아래 이름을 클릭하여 즉시 배정하실 수 있습니다.
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -3151,7 +3151,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                                     participantType: p.participant_type === '학생' ? (p.department || '학생') : p.participant_type 
                                   });
                                 }}
-                                className="bg-white hover:bg-amber-100 cursor-pointer border border-amber-300 text-amber-900 font-semibold px-2.5 py-1.5 rounded-lg text-[10px] transition-all-custom flex items-center gap-1 shadow-sm"
+                                className="bg-white hover:bg-amber-100 cursor-pointer border border-amber-300 text-amber-900 font-semibold px-2.5 py-1.5 rounded-lg text-[13px] transition-all-custom flex items-center gap-1 shadow-sm"
                                 title="클릭하면 바로 현재 조편성 그룹의 조에 배정할 수 있습니다"
                               >
                                 {p.name} ({p.gender === '남' ? '남' : '여'} / <span className="text-amber-700 font-bold">{p.participant_type === '학생' ? p.department : p.participant_type}</span>)
@@ -3165,7 +3165,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             const isTeacherMatch = gg.assign_teachers && (p.participant_type === '교사' || p.participant_type === '봉사자') && (!p.department || gg.included_departments.includes(p.department));
                             return !(isStudentMatch || isTeacherMatch);
                           }).length === 0 && (
-                            <span className="text-[10px] text-slate-400 italic py-1">타 부서 미배정자가 없습니다.</span>
+                            <span className="text-[13px] text-slate-400 italic py-1">타 부서 미배정자가 없습니다.</span>
                           )}
                         </div>
                       </div>
@@ -3185,7 +3185,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
-                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full inline-flex items-center gap-1 mb-1.5">
+                <span className="bg-indigo-100 text-indigo-700 text-[13px] font-extrabold px-2.5 py-1 rounded-full inline-flex items-center gap-1 mb-1.5">
                   <Zap className="w-3 h-3 fill-indigo-600 text-indigo-600" />
                   빠른 조 배정 / 이동
                 </span>
@@ -3226,7 +3226,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       }`}
                     >
                       <span className="text-center font-extrabold">{g.name}</span>
-                      {isCurrent && <span className="text-[9px] font-medium text-indigo-500">(현재 소속)</span>}
+                      {isCurrent && <span className="text-[12px] font-medium text-indigo-500">(현재 소속)</span>}
                     </button>
                   );
                 })}
@@ -3512,7 +3512,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                             setApAttendance([...apAttendance, d.date]);
                           }
                         }}
-                        className={`py-1.5 px-3 rounded-lg text-[10px] font-bold border transition-all-custom ${
+                        className={`py-1.5 px-3 rounded-lg text-[13px] font-bold border transition-all-custom ${
                           isChecked 
                             ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                             : 'bg-white text-slate-500 border-slate-200'
@@ -3562,7 +3562,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
                       [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
                     </span>
                     {event.custom_consent_content && (
-                      <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                      <p className="text-[13px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
                     )}
                   </label>
                 </div>
@@ -3700,7 +3700,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
               <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-200 flex flex-col gap-2">
                 <label className="text-xs font-bold text-amber-900 flex items-center justify-between">
                   <span>비밀번호 변경 (선택사항)</span>
-                  <span className="text-[10px] text-amber-700 font-normal">비워둘 경우 기존 비밀번호 유지</span>
+                  <span className="text-[13px] text-amber-700 font-normal">비워둘 경우 기존 비밀번호 유지</span>
                 </label>
                 <input
                   type="password"

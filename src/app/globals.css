@@ -1,4 +1,20 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 @import "tailwindcss";
+
+/* 글씨 크기 한 단계 키우기 (50대 이상도 휴대폰에서 편하게 읽도록)
+   기존: xs 12px / sm 14px / base 16px / lg 18px
+   변경: xs 14px / sm 16px / base 17px / lg 19px */
+@theme {
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.55;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+}
 
 :root {
   --background: #f8fafc;
@@ -29,7 +45,9 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
+  word-break: keep-all; /* 한글 단어가 줄 끝에서 어색하게 잘리지 않도록 */
+  -webkit-text-size-adjust: 100%;
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -44,4 +62,9 @@ body {
 .input-focus-ring:focus {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+/* 입력칸 글씨는 최소 16px: 아이폰에서 입력칸을 누를 때 화면이 저절로 확대되는 현상 방지 */
+input, select, textarea {
+  font-size: max(16px, 1em);
 }

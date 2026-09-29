@@ -547,7 +547,7 @@ export default function RegisterPage({ params }: PageProps) {
                   >
                     <Calendar className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
                     <span className="text-2xs font-semibold">{dateObj.label}</span>
-                    <span className={`text-[9px] font-medium font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{dateObj.date.substring(5)}</span>
+                    <span className={`text-[12px] font-medium font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{dateObj.date.substring(5)}</span>
                   </button>
                 );
               })}
@@ -597,14 +597,14 @@ export default function RegisterPage({ params }: PageProps) {
                   [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
                 </span>
                 {event.custom_consent_content && (
-                  <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                  <p className="text-[13px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
                 )}
               </label>
             </div>
           )}
 
           {/* 개인정보 영구 파기 정책 고지 */}
-          <div className="flex items-start gap-2 bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 text-[10px] text-slate-500 leading-normal">
+          <div className="flex items-start gap-2 bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 text-[13px] text-slate-500 leading-normal">
             <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold text-indigo-950 block mb-0.5">개인정보 파기 정책 안내</span>

@@ -531,7 +531,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">{church.name} 관리 대시보드</h1>
-            <p className="text-[10px] text-slate-400 font-medium">지방회: {district.name} | 행사명: {event.name}</p>
+            <p className="text-[13px] text-slate-400 font-medium">지방회: {district.name} | 행사명: {event.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between md:justify-end">
@@ -589,11 +589,11 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block font-semibold">총 등록 인원</span>
+                  <span className="text-[13px] text-slate-500 block font-semibold">총 등록 인원</span>
                   <span className="text-2xl font-black text-slate-950 mt-1 block">{participants.length}명</span>
                 </div>
                 <div className="bg-indigo-50/50 p-4 rounded-xl text-center border border-indigo-100">
-                  <span className="text-[10px] text-indigo-700 block font-semibold">학생</span>
+                  <span className="text-[13px] text-indigo-700 block font-semibold">학생</span>
                   <span className="text-2xl font-black text-indigo-950 mt-1 block">{studentCount}명</span>
                 </div>
               </div>
@@ -625,14 +625,14 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               {/* 본부 입금 계좌 */}
               {paymentSettings ? (
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2 relative">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">지방 연합회 입금 계좌</span>
+                  <span className="text-[13px] text-slate-400 font-bold uppercase">지방 연합회 입금 계좌</span>
                   <p className="text-xs font-bold text-slate-800">{paymentSettings.bank_name}</p>
                   <p className="text-sm font-black text-slate-900 tracking-wide">{paymentSettings.account_number}</p>
                   <p className="text-xs text-slate-500 font-medium">예금주: {paymentSettings.account_holder}</p>
                   
                   <button
                     onClick={handleCopyAccount}
-                    className="absolute right-3 top-3 bg-white hover:bg-slate-100 text-slate-600 p-1.5 rounded-lg border border-slate-200 transition-all-custom flex items-center gap-1 text-[10px] font-bold"
+                    className="absolute right-3 top-3 bg-white hover:bg-slate-100 text-slate-600 p-1.5 rounded-lg border border-slate-200 transition-all-custom flex items-center gap-1 text-[13px] font-bold"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? '복사됨' : '복사'}
@@ -667,7 +667,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
               )}
 
               {/* 납부 주의 문구 */}
-              <div className="flex items-start gap-2 bg-blue-50 p-4 rounded-xl border border-blue-100 text-[11px] text-blue-800 leading-relaxed mt-auto">
+              <div className="flex items-start gap-2 bg-blue-50 p-4 rounded-xl border border-blue-100 text-[14px] text-blue-800 leading-relaxed mt-auto">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <p>
                   입금 확인은 {district.name} 연합본부 관리자가 직접 처리합니다. 확인이 조금 늦어질 수 있습니다.
@@ -687,7 +687,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                   if (count === 0) return null;
                   return (
                     <div key={dep} className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                      <span className="text-[11px] text-slate-500 font-semibold block">{dep}</span>
+                      <span className="text-[14px] text-slate-500 font-semibold block">{dep}</span>
                       <span className="text-lg font-black text-slate-800 block mt-1">{count}명</span>
                     </div>
                   );
@@ -722,7 +722,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                   <UserCheck className="w-4 h-4 text-indigo-600" />
                   교회 담당자 정보 관리
                 </h3>
-                <p className="text-[11px] text-indigo-700 font-semibold mb-4 leading-relaxed">
+                <p className="text-[14px] text-indigo-700 font-semibold mb-4 leading-relaxed">
                   현재 로그인된 계정의 이름, 연락처, 비밀번호 등<br />
                   접속자 정보를 변경하려면 아래 버튼을 클릭하세요.
                 </p>
@@ -811,7 +811,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                       <tr key={p.id} className="hover:bg-slate-50/50 group">
                         <td className="p-3 font-semibold text-slate-900 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{p.name}</td>
                         <td className="p-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold mr-1 ${
+                          <span className={`px-2 py-0.5 rounded text-[13px] font-bold mr-1 ${
                             p.participant_type === '학생' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
                           }`}>
                             {p.participant_type}
@@ -824,17 +824,17 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         <td className="p-3">
                           {p.participant_type === '학생' ? (
                             <div>
-                              <p className="font-semibold text-[10px] text-slate-500">{p.guardian_name}</p>
-                              <p className="text-[11px] font-medium">{p.guardian_phone}</p>
+                              <p className="font-semibold text-[13px] text-slate-500">{p.guardian_name}</p>
+                              <p className="text-[14px] font-medium">{p.guardian_phone}</p>
                             </div>
                           ) : (
-                            <p className="text-[11px] font-medium">{p.personal_phone}</p>
+                            <p className="text-[14px] font-medium">{p.personal_phone}</p>
                           )}
                         </td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-0.5">
                             {p.attendance_schedule.map(d => (
-                              <span key={d} className="bg-slate-100 text-slate-700 text-[9px] font-bold px-1 rounded">
+                              <span key={d} className="bg-slate-100 text-slate-700 text-[12px] font-bold px-1 rounded">
                                 {d.substring(5)}
                               </span>
                             ))}
@@ -842,11 +842,11 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         </td>
                         <td className="p-3 text-center">
                           {p.assigned_group_id ? (
-                            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <span className="bg-blue-50 text-blue-700 text-[13px] font-bold px-2 py-0.5 rounded-full">
                               {groups.find(g => g.id === p.assigned_group_id)?.name || '배정됨'}
                             </span>
                           ) : (
-                            <span className="bg-slate-100 text-slate-400 text-[10px] px-2 py-0.5 rounded-full">
+                            <span className="bg-slate-100 text-slate-400 text-[13px] px-2 py-0.5 rounded-full">
                               미배정
                             </span>
                           )}
@@ -989,7 +989,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         <td className="p-3 font-semibold text-slate-900">{req.requested_participant_name}</td>
                         <td className="p-3 text-slate-500">{req.reason || '-'}</td>
                         <td className="p-3 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-bold ${
                             req.status === '반영됨' ? 'bg-emerald-50 text-emerald-700' :
                             req.status === '미반영' ? 'bg-rose-50 text-rose-700' :
                             'bg-yellow-50 text-yellow-700'
@@ -1000,7 +1000,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                         <td className="p-3 text-center">
                           <button
                             onClick={() => handleDeleteRequest(req.id)}
-                            className="p-1 bg-slate-50 hover:bg-rose-50 text-rose-600 rounded border border-slate-200 transition-all-custom text-[10px] font-bold"
+                            className="p-1 bg-slate-50 hover:bg-rose-50 text-rose-600 rounded border border-slate-200 transition-all-custom text-[13px] font-bold"
                           >
                             삭제
                           </button>
@@ -1205,7 +1205,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                             setPAttendance([...pAttendance, d.date]);
                           }
                         }}
-                        className={`py-1.5 px-3 rounded-lg text-[10px] font-bold border transition-all-custom ${
+                        className={`py-1.5 px-3 rounded-lg text-[13px] font-bold border transition-all-custom ${
                           isChecked 
                             ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                             : 'bg-white text-slate-500 border-slate-200'
@@ -1255,7 +1255,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
                       [{event.custom_consent_required ? '필수' : '선택'}] {event.custom_consent_title || '추가 동의서'}
                     </span>
                     {event.custom_consent_content && (
-                      <p className="text-[10px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
+                      <p className="text-[13px] text-slate-400 mt-1 whitespace-pre-wrap leading-normal font-medium">{event.custom_consent_content}</p>
                     )}
                   </label>
                 </div>
