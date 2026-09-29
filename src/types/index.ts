@@ -78,7 +78,8 @@ export interface Participant {
   photo_consent: boolean;
   custom_consent_agreed?: boolean;
   attendance_schedule: string[];
-  edit_password_hash: string;
+  edit_password_hash: string; // 서버에만 저장되는 해시값 (브라우저로는 전달되지 않음)
+  edit_password?: string; // 신규 등록·비밀번호 재설정 시에만 서버로 보내는 값 (서버가 해시로 바꿔 저장)
   memo?: string;
   assigned_group_id?: string | null;
   created_at: string;

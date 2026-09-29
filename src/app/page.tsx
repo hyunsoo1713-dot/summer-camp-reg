@@ -45,7 +45,7 @@ export default function PlatformHomePage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -92,6 +92,7 @@ export default function PlatformHomePage() {
         phone: phone.trim(),
         admin_church_name: ''
       }, adminLoginId.trim(), adminPassword.trim(), '');
+      await db.flush(); // 서버 저장(주소·아이디 중복 확인 포함)이 끝날 때까지 대기
 
       setSubmittedDistrict(newDist);
       setIsSubmitted(true);

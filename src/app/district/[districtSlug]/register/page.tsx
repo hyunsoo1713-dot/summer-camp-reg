@@ -104,15 +104,6 @@ export default function RegisterPage({ params }: PageProps) {
     setLoading(false);
   }, [districtSlug, router]);
 
-  // 비밀번호 간단 해싱 함수
-  const hashPassword = (pw: string) => {
-    try {
-      const reversed = pw.split('').reverse().join('');
-      return btoa(unescape(encodeURIComponent(reversed)));
-    } catch {
-      return pw;
-    }
-  };
 
   const handleAttendanceChange = (date: string) => {
     if (attendance.includes(date)) {
@@ -122,7 +113,7 @@ export default function RegisterPage({ params }: PageProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -196,9 +187,11 @@ export default function RegisterPage({ params }: PageProps) {
         photo_consent: photoConsent,
         custom_consent_agreed: event?.custom_consent_enabled ? customConsentAgreed : false,
         attendance_schedule: attendance,
-        edit_password_hash: hashPassword(password),
+        edit_password_hash: '',
+        edit_password: password, // 서버에서 안전하게 해시하여 저장
         memo: memo.trim()
       });
+      await db.flush(); // 서버 저장이 끝나야 완료 화면을 보여줍니다
 
       setRegisteredData(newParticipant);
       setIsCompleted(true);

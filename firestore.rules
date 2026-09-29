@@ -1,9 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 브라우저(클라이언트 SDK)의 직접 접근을 모두 차단합니다.
+    // 모든 읽기/쓰기는 앱 서버(Cloud Run)의 Admin SDK를 통해서만 이루어지며,
+    // 서버가 로그인·권한을 확인한 뒤에만 처리합니다. (Admin SDK는 이 규칙의 영향을 받지 않습니다.)
     match /{document=**} {
-      // Custom Auth (localStorage) 기반 환경이므로 Firestore Client SDK의 모든 읽기/쓰기/삭제 권한을 허용합니다.
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

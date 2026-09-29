@@ -1,17 +1,3 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-// Next.js SSR 및 클라이언트 환경의 중복 초기화 예방
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const dbFirestore = getFirestore(app);
-export const storageFirebase = getStorage(app);
+// 이 파일은 보안 개선 작업(2026-09)으로 더 이상 사용하지 않습니다. 삭제해도 됩니다.
+// 브라우저가 Firestore에 직접 접근하던 방식은 src/services/apiDb.ts + src/server/* 서버 API 방식으로 대체되었습니다.
+export {};

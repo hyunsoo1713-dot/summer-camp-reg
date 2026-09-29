@@ -236,7 +236,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
     setShowProfileModal(true);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileError('');
     setProfileSuccess('');
@@ -262,10 +262,6 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
         setProfileError('비밀번호를 변경하려면 현재 비밀번호를 입력해 주세요.');
         return;
       }
-      if (mgrCurrentPw !== currentManager.password_hash) {
-        setProfileError('현재 비밀번호가 일치하지 않습니다.');
-        return;
-      }
       if (!mgrNewPw || mgrNewPw.length < 4) {
         setProfileError('새 비밀번호는 4자 이상이어야 합니다.');
         return;
@@ -285,10 +281,12 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
       };
 
       if (isPasswordChange) {
-        updates.password_hash = mgrNewPw;
+        // 현재 비밀번호 확인과 변경은 서버에서 처리합니다.
+        await db.changeOwnPassword(mgrCurrentPw, mgrNewPw);
       }
 
       const updated = db.updateManager(currentManager.id, updates);
+      await db.flush();
       setCurrentManager(updated);
 
       if (session) {
@@ -310,7 +308,8 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await db.logout();
     localStorage.removeItem('evt_session');
     router.push(`/district/${districtSlug}/login`);
   };

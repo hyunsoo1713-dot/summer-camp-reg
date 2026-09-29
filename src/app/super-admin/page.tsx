@@ -111,17 +111,17 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const config = db.getPlatformConfig();
-    const expectedPassword = config.super_admin_password || process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || 'super123';
-    if (password === expectedPassword) { // 최고관리자 비밀번호 설정
-      localStorage.setItem('super_session', 'active');
+    // 비밀번호 확인은 서버에서 합니다. (브라우저 코드에는 비밀번호가 들어 있지 않음)
+    const result = await db.superLogin(password);
+    if (result.success) {
       setIsAuthenticated(true);
       setLoginError('');
+      setPassword('');
       loadDistricts();
     } else {
-      setLoginError('비밀번호가 잘못되었습니다.');
+      setLoginError(result.error || '비밀번호가 잘못되었습니다.');
     }
   };
 
@@ -141,16 +141,8 @@ export default function SuperAdminDashboard() {
     }
 
     try {
-      const config = db.getPlatformConfig();
-      const expectedPw = config.super_admin_password || process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || 'super123';
-      if (currentPw !== expectedPw) {
-        triggerToast('현재 비밀번호가 일치하지 않습니다.', 'error');
-        return;
-      }
-
-      await db.updatePlatformConfig({
-        super_admin_password: newPw
-      });
+      // 현재 비밀번호 확인과 변경은 서버에서 처리합니다.
+      await db.changeOwnPassword(currentPw, newPw);
       triggerToast('최고 관리자 비밀번호가 성공적으로 변경되었습니다.', 'success');
       setCurrentPw('');
       setNewPw('');
@@ -160,7 +152,8 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await db.logout();
     localStorage.removeItem('super_session');
     setIsAuthenticated(false);
     setPassword('');

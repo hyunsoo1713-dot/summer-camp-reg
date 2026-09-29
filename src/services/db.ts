@@ -1,14 +1,6 @@
-import { mockDb } from './mockDb';
-import { firebaseDb } from './firebaseDb';
+import { apiDb } from './apiDb';
 
-// 이 파일은 Firebase DB 레이어와 Mock DB 레이어를 스위칭하기 위한 통합 브릿지입니다.
-// NEXT_PUBLIC_USE_MOCK_DB가 'false'인 경우 실제 Firebase Firestore를 활성화합니다.
-
-const useMock = () => {
-  if (typeof window === 'undefined') return true;
-  return process.env.NEXT_PUBLIC_USE_MOCK_DB !== 'false';
-};
-
-export const db = (useMock() ? mockDb : firebaseDb) as typeof mockDb;
-
-
+// 모든 화면이 사용하는 데이터 접근 지점입니다.
+// 브라우저는 Firestore에 직접 접근하지 않고, apiDb가 서버 API(/api/...)를 통해 읽고 씁니다.
+// (예전의 mockDb/firebaseDb 직접 접근 방식은 보안상 사용하지 않습니다.)
+export const db = apiDb;

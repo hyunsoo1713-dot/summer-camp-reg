@@ -6,3 +6,5 @@ Dockerfile
 .dockerignore
 README.md
 npm-debug.log
+
+_backup_before_security_fix

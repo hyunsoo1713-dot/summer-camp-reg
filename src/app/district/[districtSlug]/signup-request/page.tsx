@@ -59,7 +59,7 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
     setLoading(false);
   }, [districtSlug, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -122,6 +122,7 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
         shirt_size: shirtSize || undefined,
         requested_church_name: !useExistingChurch ? newChurchName.trim() : undefined
       }, false); // autoApprove = false (승인 대기)
+      await db.flush(); // 서버 저장(아이디 중복 확인 포함)이 끝날 때까지 대기
 
       setIsSubmitted(true);
       window.scrollTo(0, 0);

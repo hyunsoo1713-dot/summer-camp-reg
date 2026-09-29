@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 보안 개선 전 원본 백업 (GitHub에 올리지 않음)
+/_backup_before_security_fix/

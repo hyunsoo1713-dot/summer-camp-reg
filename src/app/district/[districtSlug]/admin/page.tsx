@@ -7,8 +7,6 @@ import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
-import { storageFirebase } from '@/utils/firebaseClient';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   Event, Church, ChurchManager, Participant, SameGroupRequest,
   GroupingGroup, Group, GroupMember, PaymentSettings, ChurchFeeOverride, ChurchPaymentStatus, District 
@@ -300,7 +298,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await db.logout();
     localStorage.removeItem('evt_session');
     router.push(`/district/${districtSlug}/login`);
   };
@@ -350,15 +349,6 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
       router.push(`/district/${districtSlug}/login`);
       return;
     }
-    const sess = JSON.parse(sessStr);
-    
-    // DB의 본부 관리자 찾기
-    const curAdmin = managers.find(m => m.login_id === sess.loginId && m.district_id === district.id);
-    if (!curAdmin) {
-      alert('관리자 계정 정보를 찾을 수 없습니다.');
-      return;
-    }
-
     if (!adminCurrentPw) {
       alert('현재 비밀번호를 입력해 주세요.');
       return;
@@ -372,16 +362,9 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
       return;
     }
 
-    // 비밀번호 체크
-    if (adminCurrentPw !== curAdmin.password_hash) {
-      alert('현재 비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
     try {
-      db.updateManager(curAdmin.id, {
-        password_hash: adminNewPw
-      });
+      // 현재 비밀번호 확인과 변경은 서버에서 처리합니다.
+      await db.changeOwnPassword(adminCurrentPw, adminNewPw);
       alert('본부 관리자 비밀번호가 성공적으로 변경되었습니다.');
       setAdminCurrentPw('');
       setAdminNewPw('');
@@ -517,10 +500,8 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
 
       // 2. Firebase Storage 업로드 → URL만 Firestore에 저장
       const eventId = event?.id || 'common';
-      const fileName = `events/${eventId}/images/${Date.now()}.jpg`;
-      const sRef = storageRef(storageFirebase, fileName);
-      const snapshot = await uploadBytes(sRef, blob);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
+      // 관리자 권한은 서버가 확인한 뒤 저장소에 올립니다.
+      const downloadUrl = await db.uploadEventImage(blob, eventId);
       setNoticeImageUrls(prev => [...prev, downloadUrl]);
     } catch (err) {
       console.error(err);

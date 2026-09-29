@@ -64,26 +64,10 @@ export default function LoginPage({ params }: PageProps) {
 
     setTimeout(async () => {
       try {
-        if (db.initForce) {
-          await db.initForce();
-        }
-        const result = db.login(loginId.trim(), password.trim(), district.id);
+        // 비밀번호 확인은 서버에서 하고, 성공하면 서버가 위조 불가능한 로그인 쿠키를 발급합니다.
+        const result = await db.login(loginId.trim(), password.trim(), districtSlug);
         
         if (result.success && result.role) {
-          // 세션 저장 (Mock/Firebase 인증)
-          // districtId와 districtSlug도 함께 세션에 적재하여 어드민에서 격리 활용
-          localStorage.setItem('evt_session', JSON.stringify({
-            loginId: loginId.trim(),
-            role: result.role,
-            churchId: result.churchId,
-            name: result.name,
-            is_admin: result.role === 'admin',
-            districtId: result.role === 'super' ? '' : district.id,
-            district_id: result.role === 'super' ? '' : district.id,
-            districtSlug: result.role === 'super' ? '' : districtSlug,
-            district_slug: result.role === 'super' ? '' : districtSlug
-          }));
-
           if (result.role === 'super') {
             // 시스템 최고 관리자는 super-admin 포털로 이동
             router.push('/super-admin');

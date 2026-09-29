@@ -99,16 +99,6 @@ export default function EditPage({ params }: PageProps) {
     initAndLoad();
   }, [districtSlug, router]);
 
-  // 비밀번호 인증을 위한 간단 해시 비교 함수
-  const hashPassword = (pw: string) => {
-    try {
-      const reversed = pw.split('').reverse().join('');
-      return btoa(unescape(encodeURIComponent(reversed)));
-    } catch {
-      return pw;
-    }
-  };
-
   const handleAttendanceChange = (date: string) => {
     if (isEditDeadlinePassed) return;
     if (attendance.includes(date)) {
@@ -118,7 +108,7 @@ export default function EditPage({ params }: PageProps) {
     }
   };
 
-  const handleAuthenticate = (e: React.FormEvent) => {
+  const handleAuthenticate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -129,19 +119,14 @@ export default function EditPage({ params }: PageProps) {
       return;
     }
 
-    // 해당 지방회의 참가자 데이터만 쿼리
-    const participants = db.getParticipants(district.id);
-    const targetHash = hashPassword(searchPassword);
-
-    const found = participants.find((p: Participant) => {
-      const isNameMatch = p.name === searchName.trim();
-      const isPhoneMatch = p.participant_type === '학생' 
-        ? p.guardian_phone === searchPhone.trim() 
-        : p.personal_phone === searchPhone.trim();
-      const isPasswordMatch = p.edit_password_hash === targetHash;
-      
-      return isNameMatch && isPhoneMatch && isPasswordMatch;
-    });
+    // 서버에서 이름·연락처·비밀번호가 모두 맞는 등록 정보만 찾아 줍니다.
+    let found: Participant | null = null;
+    try {
+      found = await db.lookupParticipant(district.id, searchName.trim(), searchPhone.trim(), searchPassword);
+    } catch (err: any) {
+      setErrorMsg(err.message || '조회 중 오류가 발생했습니다.');
+      return;
+    }
 
     if (!found) {
       setErrorMsg('일치하는 등록 정보를 찾을 수 없습니다. 이름, 연락처 또는 비밀번호를 다시 확인해 주세요.');
@@ -170,7 +155,7 @@ export default function EditPage({ params }: PageProps) {
     setIsAuthenticated(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -236,6 +221,7 @@ export default function EditPage({ params }: PageProps) {
         attendance_schedule: attendance,
         memo: memo.trim()
       });
+      await db.flush();
 
       setIsCompleted(true);
       window.scrollTo(0, 0);

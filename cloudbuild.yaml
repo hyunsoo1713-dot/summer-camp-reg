@@ -21,6 +21,9 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      # 비밀 값은 Secret Manager에서 주입합니다. (처음 한 번 비밀 생성 필요 — SECURITY_UPDATE.md 참고)
+      - '--update-secrets'
+      - 'SESSION_SECRET=evt-session-secret:latest,SUPER_ADMIN_PASSWORD=evt-super-admin-password:latest'
 
 images:
   - 'gcr.io/summer-event-reg/summer-camp-app:latest'
