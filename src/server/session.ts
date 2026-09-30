@@ -65,6 +65,34 @@ export function decodeSession(token: string | undefined | null): Session | null 
   }
 }
 
+/** 범용 서명 토큰 (예: 학부모 사진 보기용 임시 출입증) */
+export function signToken(obj: Record<string, unknown>, ttlSec: number): string {
+  const payload = Buffer.from(JSON.stringify({ ...obj, exp: Math.floor(Date.now() / 1000) + ttlSec }), 'utf8').toString('base64url');
+  return `${payload}.${sign(payload)}`;
+}
+
+export function verifyToken<T = Record<string, unknown>>(token: string | undefined | null): (T & { exp: number }) | null {
+  if (!token) return null;
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return null;
+  let expected: string;
+  try {
+    expected = sign(payload);
+  } catch {
+    return null;
+  }
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const obj = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!obj.exp || obj.exp < Math.floor(Date.now() / 1000)) return null;
+    return obj;
+  } catch {
+    return null;
+  }
+}
+
 export function setSessionCookie(res: NextResponse, s: Omit<Session, 'exp'>) {
   res.cookies.set(SESSION_COOKIE, encodeSession(s), {
     httpOnly: true,

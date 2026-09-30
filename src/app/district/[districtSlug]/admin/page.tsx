@@ -4,6 +4,8 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
+import PhotoAlbum from '@/components/PhotoAlbum';
+import { dataDeleteDate, koreanMonthDay } from '@/utils/photoDate';
 import { formatPhone } from '@/utils/format';
 import { excelUtils } from '@/utils/excel';
 import { runAutoGrouping } from '@/utils/grouping';
@@ -158,7 +160,7 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
   };
 
   // 탭 제어
-  const [activeTab, setActiveTab] = useState<'settings' | 'churches' | 'participants' | 'grouping'>('settings');
+  const [activeTab, setActiveTab] = useState<'settings' | 'churches' | 'participants' | 'grouping' | 'photos'>('settings');
   const [tempPaidAmounts, setTempPaidAmounts] = useState<Record<string, string>>({});
 
   // 커스텀 모달 상태 정의
@@ -1390,9 +1392,25 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
         </div>
       </header>
 
+      {/* 자동 영구 삭제 안내 */}
+      {event && (() => {
+        const at = dataDeleteDate(event.end_date, event.registration_end_date);
+        if (!at) return null;
+        const daysLeft = Math.ceil((at.getTime() - Date.now()) / 86400000);
+        const soon = daysLeft <= 7;
+        return (
+          <div className={`px-6 py-3 text-sm leading-relaxed border-b ${soon ? 'bg-rose-50 text-rose-800 border-rose-100' : 'bg-amber-50 text-amber-900 border-amber-100'}`}>
+            📅 개인정보 보호를 위해 이 행사의 <b>참가자 명단·조편성·참가비 기록·사진</b>은{' '}
+            <b>{koreanMonthDay(at)}</b>에 자동으로 영구 삭제됩니다 (행사 마지막 날 + 30일
+            {soon && daysLeft > 0 ? `, ${daysLeft}일 남음` : ''}).{' '}
+            필요한 자료는 그 전에 <b>엑셀로 받아 두세요.</b> 지운 뒤에는 되살릴 수 없습니다.
+          </div>
+        );
+      })()}
+
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200 px-6 flex gap-4 overflow-x-auto">
-        {(['settings', 'churches', 'participants', 'grouping'] as const).map(tab => (
+        {(['settings', 'churches', 'participants', 'grouping', 'photos'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -1406,12 +1424,18 @@ export default function DistrictAdminDashboard({ params }: PageProps) {
             {tab === 'churches' && '교회 & 납부 관리'}
             {tab === 'participants' && '전체 등록자 & 엑셀'}
             {tab === 'grouping' && '자동 조편성'}
+            {tab === 'photos' && '참가자 사진 찾기'}
           </button>
         ))}
       </div>
 
       {/* Main Container */}
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto">
+
+        {/* 사진 앨범 */}
+        {activeTab === 'photos' && (
+          event ? <PhotoAlbum eventId={event.id} mode="staff" defaultCount={participants.length} /> : <p className="text-sm text-slate-500">먼저 행사를 만들어 주세요.</p>
+        )}
 
         {/* TAB 1: SETTINGS */}
         {activeTab === 'settings' && (

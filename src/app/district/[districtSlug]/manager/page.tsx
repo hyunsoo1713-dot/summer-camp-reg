@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
+import PhotoAlbum from '@/components/PhotoAlbum';
 import { formatPhone } from '@/utils/format';
 import { Participant, Church, SameGroupRequest, ChurchPaymentStatus, PaymentSettings, Event, District, ChurchManager, Group } from '@/types';
 import { 
@@ -64,7 +65,7 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
   };
 
   // UI 탭
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'participants' | 'requests'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'participants' | 'requests' | 'photos'>('dashboard');
 
   // 복사 피드백
   const [copied, setCopied] = useState(false);
@@ -558,12 +559,12 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-slate-200 px-6 flex gap-4">
-        {(['dashboard', 'participants', 'requests'] as const).map(tab => (
+      <div className="bg-white border-b border-slate-200 px-6 flex gap-4 overflow-x-auto">
+        {(['dashboard', 'participants', 'requests', ...(event?.photo_match?.status === 'on' ? (['photos'] as const) : [])] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`py-4 px-2 font-bold text-sm border-b-2 transition-all-custom ${
+            className={`py-4 px-2 font-bold text-sm border-b-2 transition-all-custom whitespace-nowrap ${
               activeTab === tab
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
@@ -572,12 +573,16 @@ export default function DistrictManagerDashboard({ params }: PageProps) {
             {tab === 'dashboard' && '교회 현황 요약'}
             {tab === 'participants' && '등록자 명단 관리'}
             {tab === 'requests' && '같은 조 요청 관리'}
+            {tab === 'photos' && '참가자 사진'}
           </button>
         ))}
       </div>
 
       {/* Content Area */}
       <main className="flex-1 p-6 max-w-6xl w-full mx-auto">
+        {/* 사진 앨범 */}
+        {activeTab === 'photos' && event && <PhotoAlbum eventId={event.id} mode="staff" />}
+
         {/* TAB 1: DASHBOARD */}
         {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

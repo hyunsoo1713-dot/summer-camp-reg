@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, clearSessionCookie, SESSION_COOKIE } from '@/server/session';
 import { loadScopedData } from '@/server/access';
 import { errorResponse, publicSession } from '@/server/http';
+import { maybeRunPhotoCleanup } from '@/server/photos';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    await maybeRunPhotoCleanup(); // 기한 지난 행사 사진 자동 삭제 (1시간에 한 번만 확인)
     const session = await getSession(req);
     const data = await loadScopedData(session);
     const res = NextResponse.json({ ok: true, session: publicSession(session), data });

@@ -3,6 +3,7 @@ import type { DocumentData } from 'firebase-admin/firestore';
 import { adminDb } from './firebaseAdmin';
 import { hashPassword, verifyPassword } from './password';
 import type { Session } from './session';
+import { removeParticipantFace } from './photos';
 
 type Doc = Record<string, any>;
 
@@ -44,7 +45,12 @@ export const todayKST = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString
 export function sanitize(col: string, doc: Doc, opts: { publicView?: boolean } = {}): Doc {
   const d = { ...doc };
   if (col === 'church_managers') delete d.password_hash;
-  if (col === 'participants') delete d.edit_password_hash;
+  if (col === 'participants') {
+    delete d.edit_password_hash;
+    d.face_enrolled = !!d.face_id; // 얼굴 사진 등록 여부만 알려 줌
+    delete d.face_id;
+    delete d.face_photo_path;
+  }
   if (col === 'platform_config') delete d.super_admin_password;
   if (col === 'districts' && opts.publicView) {
     delete d.phone;
@@ -149,12 +155,13 @@ interface Ctx {
   newLoginIds: Set<string>;
   affectedChurches: Set<string>;
   affectedDistrictsForRecalc: Set<string>;
+  faceRemovals: Record<string, any>[];
 }
 
 const PARTICIPANT_FIELDS = new Set([
   'id', 'district_id', 'event_id', 'church_id', 'participant_type', 'name', 'gender', 'department',
   'birth_year', 'guardian_name', 'guardian_phone', 'personal_phone', 'role', 'shirt_size', 'health_note',
-  'photo_consent', 'custom_consent_agreed', 'attendance_schedule', 'memo', 'assigned_group_id',
+  'photo_consent', 'custom_consent_agreed', 'attendance_schedule', 'memo', 'assigned_group_id', 'face_consent',
   'created_at', 'updated_at',
 ]);
 const PUBLIC_DISTRICT_FIELDS = new Set(['id', 'name', 'slug', 'manager_name', 'phone', 'admin_church_name', 'created_at']);
@@ -362,6 +369,36 @@ async function authorizeAndBuild(op: Exclude<WriteOp, { kind: 'recalc' }>, ctx: 
   }
 
   // ----- 공통 후처리 -----
+  // 「참가자 사진 찾기」 관련 값은 전용 API로만 바뀝니다.
+  if (next && col === 'events') {
+    if (existing?.photo_match) next.photo_match = existing.photo_match;
+    else delete next.photo_match;
+    // 자동 파기 기록도 서버만 씀
+    if (existing?.data_purged_at) next.data_purged_at = existing.data_purged_at;
+    else delete next.data_purged_at;
+  }
+  if (col === 'participants') {
+    const FACE_FIELDS = ['face_id', 'face_photo_path', 'face_enrolled_at'];
+    if (next) {
+      delete next.face_enrolled;
+      for (const k of FACE_FIELDS) {
+        if (existing && existing[k] !== undefined) next[k] = existing[k];
+        else delete next[k];
+      }
+      // 얼굴 인식 동의는 본인(학부모·참가자)만 바꿀 수 있음
+      if (session) {
+        if (existing && existing.face_consent !== undefined) next.face_consent = existing.face_consent;
+        else delete next.face_consent;
+      } else if (next.face_consent !== undefined) {
+        next.face_consent = next.face_consent === true;
+      }
+    }
+    // 동의 철회 또는 삭제 → 얼굴 정보 삭제
+    if (existing?.face_id && (!next || next.face_consent !== true)) {
+      ctx.faceRemovals.push(existing);
+      if (next) for (const k of FACE_FIELDS) delete next[k];
+    }
+  }
   if (next && col === 'church_managers') {
     const loginId = String(next.login_id || '').trim();
     if (!existing || existing.login_id !== loginId) {
@@ -411,6 +448,7 @@ export async function applyWrites(session: Session | null, ops: WriteOp[], editA
     newLoginIds: new Set(),
     affectedChurches: new Set(),
     affectedDistrictsForRecalc: new Set(),
+    faceRemovals: [],
   };
   const db = adminDb();
   const writes: { col: string; id: string; data: Doc | null }[] = [];
@@ -438,6 +476,9 @@ export async function applyWrites(session: Session | null, ops: WriteOp[], editA
     }
     await batch.commit();
   }
+
+  // 동의 철회·삭제된 참가자의 얼굴 정보 삭제
+  for (const p of ctx.faceRemovals) await removeParticipantFace(p);
 
   // 행사 참가비 설정이 바뀐 지방회는 모든 교회 재계산
   for (const D of ctx.affectedDistrictsForRecalc) {

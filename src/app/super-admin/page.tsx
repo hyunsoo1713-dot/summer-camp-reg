@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/services/db';
+import { koreanMonthDay, photoDeleteDate } from '@/utils/photoDate';
 import { District, ChurchManager } from '@/types';
-import { 
-  ShieldAlert, CheckCircle2, XCircle, Clock, Search, 
+import {   ShieldAlert, CheckCircle2, XCircle, Clock, Search, 
   Settings, LogOut, ArrowRight, RefreshCw, AlertCircle, Save, Lock
 } from 'lucide-react';
 
@@ -357,6 +357,60 @@ export default function SuperAdminDashboard() {
         
         {activeTab === 'districts' && (
           <>
+        {/* 「참가자 사진 찾기」 사용 신청 관리 */}
+        {events.some(ev => ev.photo_match && ev.photo_match.status !== 'off') && (
+          <div className="bg-slate-900 border border-indigo-900 p-5 rounded-2xl flex flex-col gap-3">
+            <h2 className="text-sm font-bold text-white">📷 참가자 사진 찾기 (1인당 100원)</h2>
+            {events.filter(ev => ev.photo_match && ev.photo_match.status !== 'off').map(ev => {
+              const pm = ev.photo_match;
+              const dist = districts.find(d => d.id === ev.district_id);
+              const act = async (action: 'enable' | 'disable') => {
+                let count = pm.paid_count || pm.expected_count || 0;
+                if (action === 'enable') {
+                  const input = window.prompt(`입금 확인된 인원을 입력해 주세요.\n(${dist?.name || ''} 신청 ${pm.expected_count}명 = ${(pm.expected_count * 100).toLocaleString()}원)`, String(pm.expected_count || ''));
+                  if (!input) return;
+                  count = parseInt(input.replace(/[^0-9]/g, ''), 10) || 0;
+                } else if (!window.confirm('사용을 끌까요? 사진 올리기와 보기가 멈춥니다. (사진은 행사 끝나고 30일이 지나면 자동으로 지워집니다)')) {
+                  return;
+                }
+                try {
+                  const res = await fetch('/api/photo-feature', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: ev.id, action, count }) });
+                  const json = await res.json().catch(() => ({}));
+                  if (!res.ok || !json.ok) throw new Error(json.error || '처리하지 못했습니다.');
+                  if (db.initForce) await db.initForce();
+                  loadDistricts();
+                  triggerToast(action === 'enable' ? '사용을 켰습니다.' : '사용을 껐습니다.', 'success');
+                } catch (err: any) {
+                  triggerToast(err.message, 'error');
+                }
+              };
+              return (
+                <div key={ev.id} className="flex items-center justify-between gap-3 flex-wrap bg-slate-800/60 rounded-xl p-3 text-sm text-slate-200">
+                  <div className="flex flex-col">
+                    <b>{dist?.name || '지방회'} · {ev.name}</b>
+                    <span className="text-slate-400 text-xs">
+                      {pm.status === 'requested'
+                        ? `입금 대기 · 신청 ${pm.expected_count}명 = ${(pm.expected_count * 100).toLocaleString()}원 (${pm.requested_by || ''})`
+                        : `사용 중 · ${pm.paid_count}명분 (사진 최대 ${(pm.paid_count * 50).toLocaleString()}장)`}
+                    </span>
+                    {photoDeleteDate(ev.end_date, ev.registration_end_date) && (
+                      <span className="text-slate-400 text-xs">사진·명단 자동 삭제: {koreanMonthDay(photoDeleteDate(ev.end_date, ev.registration_end_date)!)} (행사 마지막 날 + 30일)</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => act('enable')} className="px-3 py-2 rounded-lg bg-indigo-600 text-white font-bold text-xs">
+                      {pm.status === 'requested' ? '입금 확인 · 켜기' : '인원 변경'}
+                    </button>
+                    {pm.status === 'on' && (
+                      <button type="button" onClick={() => act('disable')} className="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 font-bold text-xs">끄기</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* 통계 요약 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col gap-1">

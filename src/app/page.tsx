@@ -180,7 +180,7 @@ export default function PlatformHomePage() {
               ⚠️ 가입 승인 처리에 최대 1~2일이 소요되거나 상황에 따라 약간 지연될 수 있으니 조금만 기다려 주시기 바랍니다.
             </p>
             <p className="text-slate-500 font-medium pt-2 border-t border-slate-200 text-[13px]">
-              🔒 개인정보 보호 방침: 연합 행사가 정상 종료된 후, 참가자 및 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단 및 조편성 데이터는 행사 마감 후 30일 이내에 영구 파기(Purge)됩니다.
+              🔒 개인정보 보호 방침: 연합 행사가 정상 종료된 후, 참가자 및 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단·조편성·참가비 기록·행사 사진은 행사 마지막 날로부터 30일이 지나면 자동으로 영구 파기됩니다.
             </p>
           </div>
 
@@ -433,7 +433,7 @@ export default function PlatformHomePage() {
           <div className="flex items-start gap-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100 mt-2 text-[13px] text-slate-500 leading-normal">
             <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
             <p>
-              모임터는 무료 및 자율 후원금으로 운영되며, <b>개인정보 보호법 준수 및 서버 디스크 용량 관리</b>를 위해 행사 종료일로부터 30일 경과 시 참가자 및 보호자 개인정보는 시스템상에서 <b>영구 완전 파기(Purge)</b>됩니다.
+              모임터는 무료 및 자율 후원금으로 운영되며, <b>개인정보 보호법 준수 및 서버 디스크 용량 관리</b>를 위해 행사 마지막 날로부터 30일이 지나면 참가자 및 보호자 개인정보는 시스템에서 <b>자동으로 영구 파기</b>됩니다.
             </p>
           </div>
         </form>

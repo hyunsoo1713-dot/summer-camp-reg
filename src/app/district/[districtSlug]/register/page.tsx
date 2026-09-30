@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
+import FacePhotoField, { uploadFacePhoto } from '@/components/FacePhotoField';
 import { Event, Church, Participant, District } from '@/types';
 import { ArrowLeft, CheckCircle, Info, Calendar } from 'lucide-react';
 
@@ -49,6 +50,10 @@ export default function RegisterPage({ params }: PageProps) {
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
+  // 「참가자 사진 찾기」
+  const [faceConsent, setFaceConsent] = useState<boolean>(false);
+  const [facePhoto, setFacePhoto] = useState<Blob | null>(null);
+  const [faceWarning, setFaceWarning] = useState<string>('');
 
   // UI 흐름 상태
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -163,6 +168,11 @@ export default function RegisterPage({ params }: PageProps) {
       setErrorMsg('수정용 비밀번호는 최소 4글자 이상이어야 합니다.');
       return;
     }
+    const photoMatchOn = event?.photo_match?.status === 'on';
+    if (photoMatchOn && faceConsent && !facePhoto) {
+      setErrorMsg('「참가자 사진 찾기」에 동의하셨다면 얼굴 사진을 올려 주세요. (원하지 않으면 동의 체크를 풀어 주세요)');
+      return;
+    }
     if (password !== passwordConfirm) {
       setErrorMsg('비밀번호가 서로 일치하지 않습니다. 다시 확인해 주세요.');
       return;
@@ -189,9 +199,21 @@ export default function RegisterPage({ params }: PageProps) {
         attendance_schedule: attendance,
         edit_password_hash: '',
         edit_password: password, // 서버에서 안전하게 해시하여 저장
-        memo: memo.trim()
+        memo: memo.trim(),
+        ...(photoMatchOn ? { face_consent: faceConsent } : {})
       });
       await db.flush(); // 서버 저장이 끝나야 완료 화면을 보여줍니다
+
+      // 얼굴 사진 등록 (실패해도 신청은 완료된 상태 — 안내만 표시)
+      setFaceWarning('');
+      if (photoMatchOn && faceConsent && facePhoto) {
+        try {
+          const phone = pType === '학생' ? guardianPhone.trim() : personalPhone.trim();
+          await uploadFacePhoto(newParticipant.id, phone, password, facePhoto);
+        } catch (err: any) {
+          setFaceWarning(err.message || '얼굴 사진을 등록하지 못했습니다.');
+        }
+      }
 
       setRegisteredData(newParticipant);
       setIsCompleted(true);
@@ -213,6 +235,9 @@ export default function RegisterPage({ params }: PageProps) {
     setCustomConsentAgreed(false);
     setAttendance(options.attendanceDates.map((d: { date: string; label: string }) => d.date));
     setMemo('');
+    setFaceConsent(false);
+    setFacePhoto(null);
+    setFaceWarning('');
     setErrorMsg('');
     setRegisteredData(null);
     setIsCompleted(false);
@@ -242,6 +267,16 @@ export default function RegisterPage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-slate-900">참가 등록 완료!</h1>
             <p className="text-sm text-slate-500">행사 등록이 정상적으로 완료되었습니다.</p>
           </div>
+
+          {faceWarning && (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-left text-sm text-amber-900">
+              <b>신청은 완료되었습니다.</b> 다만 얼굴 사진은 등록하지 못했어요.
+              <p className="mt-1">{faceWarning}</p>
+              <p className="mt-1">
+                <Link href={`/district/${districtSlug}/edit`} className="underline font-semibold">내 신청 내역 조회 / 수정</Link>에서 다시 올려 주세요.
+              </p>
+            </div>
+          )}
 
           {/* 등록 정보 요약 카드 */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col gap-3.5 text-left text-sm">
@@ -568,6 +603,17 @@ export default function RegisterPage({ params }: PageProps) {
             </label>
           </div>
 
+          {/* 11-1. 참가자 사진 찾기 (지방회가 사용할 때만) */}
+          {event?.photo_match?.status === 'on' && (
+            <FacePhotoField
+              isStudent={pType === '학생'}
+              consent={faceConsent}
+              onConsentChange={setFaceConsent}
+              photo={facePhoto}
+              onPhotoChange={setFacePhoto}
+            />
+          )}
+
           {/* 11-2. 개인정보 수집 및 이용 동의 */}
           <div className="flex items-center gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
             <input
@@ -609,7 +655,7 @@ export default function RegisterPage({ params }: PageProps) {
             <div>
               <span className="font-bold text-indigo-950 block mb-0.5">개인정보 파기 정책 안내</span>
               <p>
-                수집된 참가자 및 보호자 개인정보(이름, 연락처, 건강 기록 등)는 행사 관리 목적으로만 사용되며, <b>행사 종료 후 30일 이내에 시스템에서 복구 불가능하도록 완전히 영구 파기(Purge)</b> 처리됩니다.
+                수집된 참가자 및 보호자 개인정보(이름, 연락처, 건강 기록 등)는 행사 관리 목적으로만 사용되며, <b>행사 마지막 날로부터 30일이 지나면 시스템에서 자동으로, 복구할 수 없게 영구 파기</b>됩니다.
               </p>
             </div>
           </div>
