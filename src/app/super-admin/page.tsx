@@ -360,14 +360,14 @@ export default function SuperAdminDashboard() {
         {/* 「참가자 사진 찾기」 사용 신청 관리 */}
         {events.some(ev => ev.photo_match && ev.photo_match.status !== 'off') && (
           <div className="bg-slate-900 border border-indigo-900 p-5 rounded-2xl flex flex-col gap-3">
-            <h2 className="text-sm font-bold text-white">📷 참가자 사진 찾기 (1인당 100원)</h2>
+            <h2 className="text-sm font-bold text-white">📷 참가자 사진 찾기 (1인당 150원)</h2>
             {events.filter(ev => ev.photo_match && ev.photo_match.status !== 'off').map(ev => {
               const pm = ev.photo_match;
               const dist = districts.find(d => d.id === ev.district_id);
               const act = async (action: 'enable' | 'disable') => {
                 let count = pm.paid_count || pm.expected_count || 0;
                 if (action === 'enable') {
-                  const input = window.prompt(`입금 확인된 인원을 입력해 주세요.\n(${dist?.name || ''} 신청 ${pm.expected_count}명 = ${(pm.expected_count * 100).toLocaleString()}원)`, String(pm.expected_count || ''));
+                  const input = window.prompt(`입금 확인된 인원을 입력해 주세요.\n(${dist?.name || ''} 신청 ${pm.expected_count}명 = ${(pm.expected_count * 150).toLocaleString()}원)`, String(pm.expected_count || ''));
                   if (!input) return;
                   count = parseInt(input.replace(/[^0-9]/g, ''), 10) || 0;
                 } else if (!window.confirm('사용을 끌까요? 사진 올리기와 보기가 멈춥니다. (사진은 행사 끝나고 30일이 지나면 자동으로 지워집니다)')) {
@@ -390,7 +390,7 @@ export default function SuperAdminDashboard() {
                     <b>{dist?.name || '지방회'} · {ev.name}</b>
                     <span className="text-slate-400 text-xs">
                       {pm.status === 'requested'
-                        ? `입금 대기 · 신청 ${pm.expected_count}명 = ${(pm.expected_count * 100).toLocaleString()}원 (${pm.requested_by || ''})`
+                        ? `입금 대기 · 신청 ${pm.expected_count}명 = ${(pm.expected_count * 150).toLocaleString()}원 (${pm.requested_by || ''})`
                         : `사용 중 · ${pm.paid_count}명분 (사진 최대 ${(pm.paid_count * 50).toLocaleString()}장)`}
                     </span>
                     {photoDeleteDate(ev.end_date, ev.registration_end_date) && (

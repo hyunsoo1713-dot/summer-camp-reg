@@ -15,11 +15,14 @@ import { collectionIdFor, getFaceProvider, type BBox } from './faceProvider';
 
 export const VIEWER_COOKIE = 'evt_view';
 const VIEWER_TTL_SEC = 60 * 60 * 2; // 2시간
-export const PHOTOS_PER_PERSON = 50; // 1인당 100원 기준, 참가자 1명당 올릴 수 있는 사진 수
+export const PHOTOS_PER_PERSON = 50; // 참가자 1명당 행사 전체에 올릴 수 있는 사진 수
 export const MAX_PHOTOS_PER_EVENT = 20000;
 export const AUTO_SIMILARITY = 99; // 이 이상이면 바로 공개
 export const REVIEW_SIMILARITY = 90; // 이 이상이면 담당자 확인 후 공개
-export const FEE_PER_PERSON = 100;
+export const FEE_PER_PERSON = 150;
+// 자동 분류는 비용이 드는 작업(분류 1번 = 동의한 참가자 수 × 약 1.4원)이라 자주 돌리지 않음
+export const NIGHTLY_MATCH_HOUR_KST = 21; // 매일 밤 9시 이후 한 번 자동 분류
+export const MATCH_COOLDOWN_MS = 60 * 60 * 1000; // 「지금 분류하기」는 1시간에 한 번
 export const KEEP_DAYS_AFTER_END = 30; // 행사 마지막 날 이후 이 기간이 지나면 사진·얼굴 정보 자동 삭제
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -148,7 +151,7 @@ export function canView(p: PhotoDoc, v: Viewer): boolean {
   if (isStaffAll(v)) return true;
   if (photoKind(p) === 'scenery') return true;
   const faces = p.faces || [];
-  if (v.kind === 'participant') return faces.some(f => f.pid === v.participant.id && visibleState(f.state));
+  if (v.kind === 'participant') return v.participant.face_consent === true && faces.some(f => f.pid === v.participant.id && visibleState(f.state));
   const s = v.session;
   if (s.managerId && p.uploaded_by === s.managerId) return true; // 내가 올린 사진
   return faces.some(f => f.church_id === s.churchId && (visibleState(f.state) || f.state === 'pending'));
@@ -192,13 +195,17 @@ export async function runMatching(eventId: string): Promise<{ matched: number; p
 
   // 사진 속 얼굴 id → 가장 닮은 참가자
   const best = new Map<string, { pid: string; church_id: string; sim: number }>();
-  for (const p of people) {
-    const matches = await provider.searchFace(coll, String(p.face_id), REVIEW_SIMILARITY);
-    for (const m of matches) {
-      if (!m.externalId.startsWith('ph_')) continue; // 다른 참가자 얼굴은 무시
-      const cur = best.get(m.faceId);
-      if (!cur || m.similarity > cur.sim) best.set(m.faceId, { pid: p.id, church_id: String(p.church_id || ''), sim: m.similarity });
-    }
+  // 5명씩 동시에 검색 (300명이면 몇 초)
+  for (let i = 0; i < people.length; i += 5) {
+    const chunk = people.slice(i, i + 5);
+    const results = await Promise.all(chunk.map(p => provider.searchFace(coll, String(p.face_id), REVIEW_SIMILARITY)));
+    chunk.forEach((p, k) => {
+      for (const m of results[k]) {
+        if (!m.externalId.startsWith('ph_')) continue; // 다른 참가자 얼굴은 무시
+        const cur = best.get(m.faceId);
+        if (!cur || m.similarity > cur.sim) best.set(m.faceId, { pid: p.id, church_id: String(p.church_id || ''), sim: m.similarity });
+      }
+    });
   }
 
   let matched = 0;
@@ -235,6 +242,91 @@ export async function runMatching(eventId: string): Promise<{ matched: number; p
 }
 
 // ---------------------------------------------------------------------------
+// 분류 일정: 매일 밤 한 번 + 「지금 분류하기」(1시간에 한 번)
+// ---------------------------------------------------------------------------
+export interface MatchState { needs_match?: boolean; last_match_at?: string }
+
+const stateRef = (eventId: string) => adminDb().collection('photo_state').doc(eventId);
+
+export async function getMatchState(eventId: string): Promise<MatchState> {
+  const s = await stateRef(eventId).get();
+  return s.exists ? (s.data() as MatchState) : {};
+}
+
+/** 새 사진·새 얼굴 사진이 생겼으니 다음 분류 때 처리해야 함 */
+export async function markNeedsMatch(eventId: string) {
+  try {
+    const cur = await getMatchState(eventId);
+    if (!cur.needs_match) await stateRef(eventId).set({ ...cur, needs_match: true });
+  } catch (err) {
+    console.error('[match] 상태 저장 실패', err);
+  }
+}
+
+/** 가장 최근의 "밤 9시(한국 시간)" 시각 */
+export function lastNightlySlot(now = Date.now()): number {
+  const KST = 9 * 3600 * 1000;
+  const k = new Date(now + KST);
+  const slotToday = Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate(), NIGHTLY_MATCH_HOUR_KST) - KST;
+  return now >= slotToday ? slotToday : slotToday - DAY_MS;
+}
+
+/** 「지금 분류하기」를 다시 누를 수 있는 시각 (지금 가능하면 0) */
+export function nextManualMatchAt(state: MatchState, now = Date.now()): number {
+  const last = Date.parse(String(state.last_match_at || ''));
+  if (Number.isNaN(last)) return 0;
+  const at = last + MATCH_COOLDOWN_MS;
+  return at > now ? at : 0;
+}
+
+/** 분류 실행 + 기록 (먼저 시각을 적어 두어 동시에 두 번 도는 것을 막음) */
+export async function runMatchingAndRecord(eventId: string, now = Date.now()) {
+  await stateRef(eventId).set({ needs_match: false, last_match_at: new Date(now).toISOString() });
+  try {
+    return await runMatching(eventId);
+  } catch (err) {
+    await stateRef(eventId).set({ needs_match: true, last_match_at: new Date(now).toISOString() });
+    throw err;
+  }
+}
+
+/** 매일 밤 9시가 지나면, 새 사진이 있는 행사만 한 번 분류 */
+export async function runNightlyMatching(now = Date.now()): Promise<string[]> {
+  const slot = lastNightlySlot(now);
+  const evSnap = await adminDb().collection('events').get();
+  const done: string[] = [];
+  for (const d of evSnap.docs) {
+    const ev = d.data();
+    if (photoMatchOf(ev).status !== 'on' || isPhotoExpired(ev, now)) continue;
+    const st = await getMatchState(d.id);
+    if (!st.needs_match) continue;
+    const last = Date.parse(String(st.last_match_at || ''));
+    if (!Number.isNaN(last) && last >= slot) continue; // 오늘 밤 이미 분류함 (이후 올린 사진은 내일 밤)
+    try {
+      await runMatchingAndRecord(d.id, now);
+      done.push(d.id);
+      console.log(`[match] 행사 ${d.id} 밤 자동 분류`);
+    } catch (err) {
+      console.error('[match] 밤 자동 분류 실패', err);
+    }
+  }
+  return done;
+}
+
+let lastNightlyCheck = 0;
+export async function maybeRunNightlyMatching(): Promise<string[]> {
+  const now = Date.now();
+  if (now - lastNightlyCheck < 10 * 60 * 1000) return [];
+  lastNightlyCheck = now;
+  try {
+    return await runNightlyMatching(now);
+  } catch (err) {
+    console.error('[match] 확인 실패', err);
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 삭제
 // ---------------------------------------------------------------------------
 export async function deletePhotoFiles(p: { full_path?: string; thumb_path?: string }) {
@@ -254,6 +346,7 @@ export async function removeParticipantFace(p: Record<string, any>) {
     console.error('[face] 얼굴 삭제 실패', err);
   }
   if (p.face_photo_path) await adminBucket().file(String(p.face_photo_path)).delete({ ignoreNotFound: true }).catch(() => {});
+  if (p.event_id) await markNeedsMatch(String(p.event_id)); // 사진 속 이름표도 다음 분류 때 정리
 }
 
 /** 한 행사의 사진·얼굴 정보 전부 삭제 (참가자 신청 정보는 그대로 둠) */
@@ -285,6 +378,7 @@ export async function purgeEventPhotos(eventId: string): Promise<number> {
   } catch (err) {
     console.error('[face] 얼굴 모음 삭제 실패', err);
   }
+  await stateRef(eventId).delete().catch(() => {});
   return snap.size;
 }
 

@@ -1,9 +1,9 @@
-// 자동 분류 실행 (사진을 다 올린 뒤 화면이 자동으로 부릅니다)
+// 「지금 분류하기」 버튼 (1시간에 한 번). 평소에는 매일 밤 9시 이후 자동으로 분류됩니다.
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/server/firebaseAdmin';
 import { HttpError } from '@/server/access';
 import { assertSameOrigin, errorResponse, readJson } from '@/server/http';
-import { canUpload, getViewer, isPhotoExpired, photoMatchOf, runMatching } from '@/server/photos';
+import { canUpload, getMatchState, getViewer, isPhotoExpired, nextManualMatchAt, photoMatchOf, runMatchingAndRecord } from '@/server/photos';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
     if (!canUpload(v, String(ev.data()!.district_id || ''))) throw new HttpError(403, '권한이 없습니다.');
     if (photoMatchOf(ev.data()).status !== 'on') throw new HttpError(400, '「참가자 사진 찾기」를 사용하지 않는 행사입니다.');
     if (isPhotoExpired(ev.data())) throw new HttpError(400, '사진 보관 기간이 끝난 행사입니다.');
-    const result = await runMatching(eventId);
+    const wait = nextManualMatchAt(await getMatchState(eventId));
+    if (wait) {
+      const min = Math.max(1, Math.ceil((wait - Date.now()) / 60000));
+      throw new HttpError(429, `분류는 1시간에 한 번만 할 수 있어요. ${min}분 뒤에 다시 눌러 주세요. (밤 9시 이후에는 자동으로 분류됩니다)`);
+    }
+    const result = await runMatchingAndRecord(eventId);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     return errorResponse(err);

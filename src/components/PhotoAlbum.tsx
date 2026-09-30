@@ -25,6 +25,7 @@ interface ListResponse {
   viewer: { kind: 'staff'; role: string; canUpload: boolean; canManage: boolean } | { kind: 'participant'; name: string; type: string };
   photos: Photo[]; review: ReviewItem[]; total: number; limit: number;
   faceStats?: { consented: number; enrolled: number };
+  match?: { last_match_at: string | null; needs_match: boolean; next_manual_at: string | null };
 }
 
 async function resizeToJpeg(file: File, maxSide: number, quality: number): Promise<{ blob: Blob; width: number; height: number }> {
@@ -208,17 +209,24 @@ export default function PhotoAlbum({ eventId, mode, defaultCount = 0 }: { eventI
       setProgress({ done: i + 1, total: list.length });
     }
     setUploading(false);
-    // 다 올린 뒤 자동 분류
-    setMatching(true);
-    try {
-      await postJson('/api/photos/match', { eventId });
-    } catch (e: any) {
-      if (!firstError) firstError = e.message;
-    } finally {
-      setMatching(false);
-    }
+    // 분류는 매일 밤 자동 (급하면 「지금 분류하기」)
     if (failed > 0) alert(`${list.length}장 중 ${failed}장을 올리지 못했습니다.\n이유: ${firstError}`);
     load();
+  };
+
+  const handleMatchNow = async () => {
+    if (!eventId) return;
+    if (!confirm('지금 사진을 분류할까요?\n(비용이 드는 작업이라 1시간에 한 번만 할 수 있어요)')) return;
+    setMatching(true);
+    try {
+      const r = await postJson('/api/photos/match', { eventId });
+      alert(`분류를 마쳤습니다.\n찾은 얼굴 ${r.matched}개 · 확인 필요 ${r.pending}개`);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setMatching(false);
+      load();
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -289,7 +297,7 @@ export default function PhotoAlbum({ eventId, mode, defaultCount = 0 }: { eventI
       {data.setting.delete_at && (
         <p className="text-sm text-amber-900 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 leading-relaxed">
           📅 사진은 <b>{lastViewDay(data.setting.delete_at)}까지</b> 볼 수 있어요. 그 다음 날 모두 자동으로 지워집니다.
-          {mode === 'participant' ? ' 마음에 드는 사진은 미리 저장해 두세요.' : ' (행사 마지막 날 + 30일, 개인정보 보호)'}
+          {mode === 'participant' ? ' 마음에 드는 사진은 미리 저장해 두세요. 새로 찍은 사진은 매일 밤 9시 이후에 찾아서 올려 드려요.' : ' (행사 마지막 날 + 30일, 개인정보 보호)'}
         </p>
       )}
       {/* 올리기 */}
@@ -326,9 +334,32 @@ export default function PhotoAlbum({ eventId, mode, defaultCount = 0 }: { eventI
             <input type="file" accept="image/*" multiple disabled={uploading || matching} className="hidden" onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
           </label>
           <p className="text-xs text-slate-400">
-            고르기만 하면 됩니다. 올린 뒤 컴퓨터가 얼굴로 자동 분류해 학부모와 교회 담당자에게 보여 줍니다.
+            고르기만 하면 됩니다. 올린 사진은 <b>매일 밤 9시 이후</b> 컴퓨터가 얼굴로 한꺼번에 분류해 학부모와 교회 담당자에게 보여 줍니다.
             사진에 촬영 비동의 참가자가 나오지 않도록 주의해 주세요.
           </p>
+          {data.match && (() => {
+            const m = data.match;
+            const fmt = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            const waitMin = m.next_manual_at ? Math.max(1, Math.ceil((Date.parse(m.next_manual_at) - Date.now()) / 60000)) : 0;
+            return (
+              <div className="flex items-center justify-between gap-3 flex-wrap bg-slate-50 rounded-2xl px-4 py-3 text-sm">
+                <div className="text-slate-600 leading-relaxed">
+                  {m.needs_match ? <b className="text-indigo-700">아직 분류 안 된 사진이 있어요 · 오늘 밤 9시 이후 자동 분류</b> : <span>모든 사진이 분류되어 있어요</span>}
+                  <br />
+                  <span className="text-xs text-slate-400">마지막 분류: {m.last_match_at ? fmt(m.last_match_at) : '아직 없음'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleMatchNow}
+                  disabled={matching || uploading || !!waitMin}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 font-bold text-sm disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {waitMin ? `${waitMin}분 뒤 다시 가능` : '지금 분류하기'}
+                </button>
+              </div>
+            );
+          })()}
         </div>
       )}
 

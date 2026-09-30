@@ -4,7 +4,7 @@ import { adminDb } from '@/server/firebaseAdmin';
 import { HttpError } from '@/server/access';
 import { errorResponse } from '@/server/http';
 import {
-  canDelete, canUpload, canView, getViewer, isStaffAll, isPhotoExpired, maybeRunPhotoCleanup, photoDeleteAt, photoKind, photoLimitOf, photoMatchOf, reviewableFaces,
+  canDelete, canUpload, canView, getMatchState, getViewer, maybeRunNightlyMatching, nextManualMatchAt, isStaffAll, isPhotoExpired, maybeRunPhotoCleanup, photoDeleteAt, photoKind, photoLimitOf, photoMatchOf, reviewableFaces,
   FEE_PER_PERSON, PHOTOS_PER_PERSON, type PhotoDoc,
 } from '@/server/photos';
 
@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     await maybeRunPhotoCleanup();
+    await maybeRunNightlyMatching(); // 밤 9시가 지났고 새 사진이 있으면 한 번 분류
     const v = await getViewer(req);
     if (!v) throw new HttpError(401, '로그인이 필요합니다.');
     const db = adminDb();
@@ -54,6 +55,13 @@ export async function GET(req: NextRequest) {
       faceStats = { consented: mine.filter(p => p.face_consent === true).length, enrolled: mine.filter(p => p.face_consent === true && p.face_id).length };
     }
 
+    let match: { last_match_at: string | null; needs_match: boolean; next_manual_at: string | null } | undefined;
+    if (v.kind === 'staff') {
+      const st = await getMatchState(eventId);
+      const next = nextManualMatchAt(st);
+      match = { last_match_at: st.last_match_at || null, needs_match: !!st.needs_match, next_manual_at: next ? new Date(next).toISOString() : null };
+    }
+
     const review =
       v.kind === 'staff'
         ? visible.flatMap(p =>
@@ -90,6 +98,7 @@ export async function GET(req: NextRequest) {
       total: all.length,
       limit,
       faceStats,
+      match,
     });
     res.headers.set('Cache-Control', 'no-store');
     return res;

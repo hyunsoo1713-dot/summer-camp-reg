@@ -5,7 +5,7 @@ import { adminBucket, adminDb } from '@/server/firebaseAdmin';
 import { HttpError } from '@/server/access';
 import { assertSameOrigin, errorResponse } from '@/server/http';
 import { collectionIdFor, getFaceProvider } from '@/server/faceProvider';
-import { canUpload, getViewer, isPhotoExpired, photoLimitOf, photoMatchOf, type PhotoDoc, type PhotoFace } from '@/server/photos';
+import { canUpload, getViewer, isPhotoExpired, markNeedsMatch, photoLimitOf, photoMatchOf, type PhotoDoc, type PhotoFace } from '@/server/photos';
 
 const MAX_FULL = 5_000_000; // 얼굴 인식(AWS)에 바로 보낼 수 있는 최대 크기 5MB
 const MAX_THUMB = 600 * 1024;
@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
       ...(indexError ? { index_error: true } : {}),
     };
     await db.collection('photos').doc(id).set(doc);
+    if (faces.length > 0) await markNeedsMatch(eventId);
     return NextResponse.json({ ok: true, id, faces: faces.length });
   } catch (err) {
     return errorResponse(err);

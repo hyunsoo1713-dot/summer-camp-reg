@@ -6,7 +6,7 @@ import { HttpError, checkEditAuth } from '@/server/access';
 import { assertSameOrigin, errorResponse } from '@/server/http';
 import { clientIp, isBlocked, recordFail, clearFails, BLOCKED_MESSAGE } from '@/server/rateLimit';
 import { collectionIdFor, getFaceProvider } from '@/server/faceProvider';
-import { isPhotoExpired, photoMatchOf, removeParticipantFace } from '@/server/photos';
+import { isPhotoExpired, markNeedsMatch, photoMatchOf, removeParticipantFace } from '@/server/photos';
 
 const MAX = 3 * 1024 * 1024;
 const isJpeg = (b: Buffer) => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     const path = `faces/${p.district_id}/${p.event_id}/${participantId}.jpg`;
     await adminBucket().file(path).save(buf, { contentType: 'image/jpeg', resumable: false });
     await ref.update({ face_id: result.faceId, face_photo_path: path, face_enrolled_at: new Date().toISOString() });
+    await markNeedsMatch(String(p.event_id)); // 오늘 밤 분류 때 이 참가자 사진도 찾음
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);
