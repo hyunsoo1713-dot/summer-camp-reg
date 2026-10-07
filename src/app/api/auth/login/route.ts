@@ -1,11 +1,11 @@
 // 지방회 관리자 / 교회 담당자 로그인
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/server/firebaseAdmin';
-import { hashPassword, verifyPassword } from '@/server/password';
+import { burnPasswordCheck, hashPassword, verifyPassword } from '@/server/password';
 import { setSessionCookie, type Session } from '@/server/session';
 import { HttpError } from '@/server/access';
 import { assertSameOrigin, errorResponse, publicSession, readJson } from '@/server/http';
-import { clientIp, isBlocked, recordFail, clearFails, BLOCKED_MESSAGE } from '@/server/rateLimit';
+import { assertNotBlocked, clearFailures, limitKeys, recordFailure } from '@/server/rateLimit';
 
 const FAIL = '아이디 또는 비밀번호가 잘못되었습니다.';
 
@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
     const districtSlug = String(body?.districtSlug || '').trim();
     if (!loginId || !password || !districtSlug) throw new HttpError(400, '아이디와 비밀번호를 입력해주세요.');
 
-    const rlKey = `login:${clientIp(req)}:${loginId}`;
-    if (isBlocked(rlKey)) throw new HttpError(429, BLOCKED_MESSAGE);
+    const rl = limitKeys(req, 'login', `${districtSlug}:${loginId}`);
+    await assertNotBlocked(rl);
 
     const db = adminDb();
     const distSnap = await db.collection('districts').where('slug', '==', districtSlug).limit(1).get();
@@ -39,11 +39,12 @@ export async function POST(req: NextRequest) {
         break;
       }
     }
+    if (candidates.length === 0) burnPasswordCheck(password); // 없는 아이디도 같은 시간이 걸리게
     if (!matched) {
-      recordFail(rlKey);
+      await recordFailure(rl);
       throw new HttpError(401, FAIL);
     }
-    clearFails(rlKey);
+    await clearFailures(rl);
 
     const m = matched.data;
     if (m.status !== 'approved') {
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
         managerId: matched.id,
         districtId: dist.id,
         districtSlug,
+        sv: Number(m.session_version || 0),
         churchId: '',
         name: dist.name ? `${dist.name} 관리자` : `${m.name} (본부 관리자)`,
       };
@@ -71,6 +73,7 @@ export async function POST(req: NextRequest) {
         managerId: matched.id,
         districtId: dist.id,
         districtSlug,
+        sv: Number(m.session_version || 0),
         churchId: String(m.church_id || ''),
         name: churchName ? `${churchName} 담당자 (${m.name})` : `담당자 (${m.name})`,
       };

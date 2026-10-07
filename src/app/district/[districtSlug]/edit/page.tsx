@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
-import FacePhotoField, { uploadFacePhoto } from '@/components/FacePhotoField';
 import { Event, Church, Participant, District } from '@/types';
 import { ArrowLeft, Search, Save, Info, ShieldAlert, CheckCircle2, Calendar } from 'lucide-react';
 
@@ -54,10 +53,6 @@ export default function EditPage({ params }: PageProps) {
   const [customConsentAgreed, setCustomConsentAgreed] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<string[]>([]);
   const [memo, setMemo] = useState<string>('');
-  // 「참가자 사진 찾기」
-  const [faceConsent, setFaceConsent] = useState<boolean>(false);
-  const [facePhoto, setFacePhoto] = useState<Blob | null>(null);
-  const [faceWarning, setFaceWarning] = useState<string>('');
 
   // UI 흐름 상태
   const [loading, setLoading] = useState<boolean>(true);
@@ -156,8 +151,6 @@ export default function EditPage({ params }: PageProps) {
     setCustomConsentAgreed(found.custom_consent_agreed || false);
     setAttendance(found.attendance_schedule);
     setMemo(found.memo || '');
-    setFaceConsent(found.face_consent === true);
-    setFacePhoto(null);
 
     setIsAuthenticated(true);
   };
@@ -210,11 +203,6 @@ export default function EditPage({ params }: PageProps) {
       return;
     }
 
-    const photoMatchOn = event?.photo_match?.status === 'on';
-    if (photoMatchOn && faceConsent && !facePhoto && !currentParticipant?.face_enrolled) {
-      setErrorMsg('「참가자 사진 찾기」에 동의하셨다면 얼굴 사진을 올려 주세요. (원하지 않으면 동의 체크를 풀어 주세요)');
-      return;
-    }
 
     try {
       db.updateParticipant(currentParticipant!.id, {
@@ -232,20 +220,9 @@ export default function EditPage({ params }: PageProps) {
         photo_consent: photoConsent,
         custom_consent_agreed: event?.custom_consent_enabled ? customConsentAgreed : false,
         attendance_schedule: attendance,
-        memo: memo.trim(),
-        ...(photoMatchOn ? { face_consent: faceConsent } : {})
+        memo: memo.trim()
       });
       await db.flush();
-
-      setFaceWarning('');
-      if (photoMatchOn && faceConsent && facePhoto) {
-        try {
-          const phone = pType === '학생' ? guardianPhone.trim() : personalPhone.trim();
-          await uploadFacePhoto(currentParticipant!.id, phone, searchPassword, facePhoto);
-        } catch (err: any) {
-          setFaceWarning(err.message || '얼굴 사진을 등록하지 못했습니다.');
-        }
-      }
 
       setIsCompleted(true);
       window.scrollTo(0, 0);
@@ -276,14 +253,6 @@ export default function EditPage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-slate-900">신청 정보 수정 완료!</h1>
             <p className="text-sm text-slate-500">참가자의 신청 내용이 성공적으로 업데이트되었습니다.</p>
           </div>
-
-          {faceWarning && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-left text-sm text-amber-900">
-              <b>신청 정보는 수정되었습니다.</b> 다만 얼굴 사진은 등록하지 못했어요.
-              <p className="mt-1">{faceWarning}</p>
-              <p className="mt-1">다시 조회해서 다른 사진으로 올려 주세요.</p>
-            </div>
-          )}
 
           <div className="flex flex-col gap-2 mt-4">
             <button
@@ -635,18 +604,6 @@ export default function EditPage({ params }: PageProps) {
                 행사 중 사진 및 영상 촬영, 연합 단체앨범 내의 인물 노출(얼굴 포함)에 동의합니다.
               </label>
             </div>
-
-            {/* 11-1. 참가자 사진 찾기 (지방회가 사용할 때만) */}
-            {event?.photo_match?.status === 'on' && (
-              <FacePhotoField
-                isStudent={pType === '학생'}
-                consent={faceConsent}
-                onConsentChange={setFaceConsent}
-                photo={facePhoto}
-                onPhotoChange={setFacePhoto}
-                alreadyEnrolled={!!currentParticipant?.face_enrolled}
-              />
-            )}
 
             {/* 11-2. 추가 동의서 (지방회 관리자 설정에 따름) */}
             {event?.custom_consent_enabled && (

@@ -28,16 +28,6 @@ export interface Event {
   custom_consent_title?: string;
   custom_consent_content?: string;
   custom_consent_required?: boolean;
-  // 「참가자 사진 찾기」(얼굴 인식 자동 분류) 사용 여부 — 서버 전용 API로만 바뀜
-  photo_match?: {
-    status: 'off' | 'requested' | 'on';
-    expected_count?: number;
-    paid_count?: number;
-    requested_at?: string;
-    requested_by?: string;
-    enabled_at?: string;
-    purged_at?: string;
-  };
   data_purged_at?: string; // 행사 후 30일이 지나 명단을 자동 영구 삭제한 시각
   created_at: string;
   updated_at: string;
@@ -88,8 +78,6 @@ export interface Participant {
   health_note?: string;
   photo_consent: boolean;
   custom_consent_agreed?: boolean;
-  face_consent?: boolean; // 「참가자 사진 찾기」 선택 동의
-  face_enrolled?: boolean; // 얼굴 사진 등록 여부 (서버가 알려 줌)
   attendance_schedule: string[];
   edit_password_hash: string; // 서버에만 저장되는 해시값 (브라우저로는 전달되지 않음)
   edit_password?: string; // 신규 등록·비밀번호 재설정 시에만 서버로 보내는 값 (서버가 해시로 바꿔 저장)

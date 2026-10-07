@@ -5,7 +5,7 @@ import { getDownloadURL } from 'firebase-admin/storage';
 import { adminBucket, adminDb } from '@/server/firebaseAdmin';
 import { getSession } from '@/server/session';
 import { HttpError } from '@/server/access';
-import { assertSameOrigin, errorResponse } from '@/server/http';
+import { readFormDataCapped, assertSameOrigin, errorResponse, sniffImage } from '@/server/http';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!session || (session.role !== 'admin' && session.role !== 'super')) {
       throw new HttpError(403, '이미지 업로드 권한이 없습니다.');
     }
-    const form = await req.formData();
+    const form = await readFormDataCapped(req, MAX_BYTES + 64 * 1024);
     const file = form.get('file');
     const eventId = String(form.get('eventId') || '');
     if (!(file instanceof Blob)) throw new HttpError(400, '파일이 없습니다.');
@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
 
     const path = `events/${eventId}/images/${Date.now()}_${randomBytes(4).toString('hex')}.${ext}`;
     const ref = adminBucket().file(path);
-    await ref.save(Buffer.from(await file.arrayBuffer()), { contentType: file.type, resumable: false });
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (sniffImage(buf) !== ext) throw new HttpError(400, 'JPG, PNG, WEBP 이미지만 올릴 수 있습니다.'); // 이름만 이미지인 파일 차단
+    await ref.save(buf, { contentType: file.type, resumable: false });
     const url = await getDownloadURL(ref);
     return NextResponse.json({ ok: true, url });
   } catch (err) {

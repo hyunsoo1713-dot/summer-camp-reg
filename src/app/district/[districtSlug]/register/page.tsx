@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { db } from '@/services/db';
 import { formatPhone } from '@/utils/format';
-import FacePhotoField, { uploadFacePhoto } from '@/components/FacePhotoField';
 import { Event, Church, Participant, District } from '@/types';
 import { ArrowLeft, CheckCircle, Info, Calendar } from 'lucide-react';
 
@@ -50,10 +49,6 @@ export default function RegisterPage({ params }: PageProps) {
   const [password, setPassword] = useState<string>('');
   const [passwordConfirm, setPasswordConfirm] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
-  // 「참가자 사진 찾기」
-  const [faceConsent, setFaceConsent] = useState<boolean>(false);
-  const [facePhoto, setFacePhoto] = useState<Blob | null>(null);
-  const [faceWarning, setFaceWarning] = useState<string>('');
 
   // UI 흐름 상태
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -168,11 +163,6 @@ export default function RegisterPage({ params }: PageProps) {
       setErrorMsg('수정용 비밀번호는 최소 4글자 이상이어야 합니다.');
       return;
     }
-    const photoMatchOn = event?.photo_match?.status === 'on';
-    if (photoMatchOn && faceConsent && !facePhoto) {
-      setErrorMsg('「참가자 사진 찾기」에 동의하셨다면 얼굴 사진을 올려 주세요. (원하지 않으면 동의 체크를 풀어 주세요)');
-      return;
-    }
     if (password !== passwordConfirm) {
       setErrorMsg('비밀번호가 서로 일치하지 않습니다. 다시 확인해 주세요.');
       return;
@@ -199,21 +189,9 @@ export default function RegisterPage({ params }: PageProps) {
         attendance_schedule: attendance,
         edit_password_hash: '',
         edit_password: password, // 서버에서 안전하게 해시하여 저장
-        memo: memo.trim(),
-        ...(photoMatchOn ? { face_consent: faceConsent } : {})
+        memo: memo.trim()
       });
       await db.flush(); // 서버 저장이 끝나야 완료 화면을 보여줍니다
-
-      // 얼굴 사진 등록 (실패해도 신청은 완료된 상태 — 안내만 표시)
-      setFaceWarning('');
-      if (photoMatchOn && faceConsent && facePhoto) {
-        try {
-          const phone = pType === '학생' ? guardianPhone.trim() : personalPhone.trim();
-          await uploadFacePhoto(newParticipant.id, phone, password, facePhoto);
-        } catch (err: any) {
-          setFaceWarning(err.message || '얼굴 사진을 등록하지 못했습니다.');
-        }
-      }
 
       setRegisteredData(newParticipant);
       setIsCompleted(true);
@@ -235,9 +213,6 @@ export default function RegisterPage({ params }: PageProps) {
     setCustomConsentAgreed(false);
     setAttendance(options.attendanceDates.map((d: { date: string; label: string }) => d.date));
     setMemo('');
-    setFaceConsent(false);
-    setFacePhoto(null);
-    setFaceWarning('');
     setErrorMsg('');
     setRegisteredData(null);
     setIsCompleted(false);
@@ -267,16 +242,6 @@ export default function RegisterPage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-slate-900">참가 등록 완료!</h1>
             <p className="text-sm text-slate-500">행사 등록이 정상적으로 완료되었습니다.</p>
           </div>
-
-          {faceWarning && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-left text-sm text-amber-900">
-              <b>신청은 완료되었습니다.</b> 다만 얼굴 사진은 등록하지 못했어요.
-              <p className="mt-1">{faceWarning}</p>
-              <p className="mt-1">
-                <Link href={`/district/${districtSlug}/edit`} className="underline font-semibold">내 신청 내역 조회 / 수정</Link>에서 다시 올려 주세요.
-              </p>
-            </div>
-          )}
 
           {/* 등록 정보 요약 카드 */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col gap-3.5 text-left text-sm">
@@ -602,17 +567,6 @@ export default function RegisterPage({ params }: PageProps) {
               행사 중 사진 및 영상 촬영, 연합 단체앨범 내의 인물 노출(얼굴 포함)에 동의합니다.
             </label>
           </div>
-
-          {/* 11-1. 참가자 사진 찾기 (지방회가 사용할 때만) */}
-          {event?.photo_match?.status === 'on' && (
-            <FacePhotoField
-              isStudent={pType === '학생'}
-              consent={faceConsent}
-              onConsentChange={setFaceConsent}
-              photo={facePhoto}
-              onPhotoChange={setFacePhoto}
-            />
-          )}
 
           {/* 11-2. 개인정보 수집 및 이용 동의 */}
           <div className="flex items-center gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-100">

@@ -89,8 +89,8 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
       setErrorMsg('아이디를 입력해 주세요.');
       return;
     }
-    if (!password || password.length < 4) {
-      setErrorMsg('비밀번호는 최소 4글자 이상이어야 합니다.');
+    if (!password || password.length < 8) {
+      setErrorMsg('비밀번호는 최소 8글자 이상이어야 합니다.');
       return;
     }
     if (password !== passwordConfirm) {
@@ -316,7 +316,7 @@ export default function DistrictSignupRequestPage({ params }: PageProps) {
             <label className="text-sm font-bold text-slate-700">로그인 비밀번호</label>
             <input
               type="password"
-              placeholder="비밀번호 4자 이상"
+              placeholder="비밀번호 8자 이상"
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm input-focus-ring"

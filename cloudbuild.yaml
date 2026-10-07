@@ -30,3 +30,5 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  # 빌드 컴퓨터 환경: 2027-03-28부터 기본값이 될 'regular' 채널을 미리 사용 (문제 시 이 줄만 삭제)
+  workerRelease: regular

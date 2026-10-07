@@ -80,6 +80,10 @@ export default function PlatformHomePage() {
       setErrorMsg('본부 관리자로 로그인할 비밀번호를 입력해 주세요.');
       return;
     }
+    if (adminPassword.length < 8) {
+      setErrorMsg('비밀번호는 8자 이상으로 정해 주세요. (아이들 개인정보를 지키기 위해서입니다)');
+      return;
+    }
     if (adminPassword !== adminPasswordConfirm) {
       setErrorMsg('비밀번호가 서로 일치하지 않습니다. 비밀번호를 다시 확인해 주세요.');
       return;
@@ -180,7 +184,7 @@ export default function PlatformHomePage() {
               ⚠️ 가입 승인 처리에 최대 1~2일이 소요되거나 상황에 따라 약간 지연될 수 있으니 조금만 기다려 주시기 바랍니다.
             </p>
             <p className="text-slate-500 font-medium pt-2 border-t border-slate-200 text-[13px]">
-              🔒 개인정보 보호 방침: 연합 행사가 정상 종료된 후, 참가자 및 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단·조편성·참가비 기록·행사 사진은 행사 마지막 날로부터 30일이 지나면 자동으로 영구 파기됩니다.
+              🔒 개인정보 보호 방침: 연합 행사가 정상 종료된 후, 참가자 및 보호자 개인정보 보호 및 DB 비용 최적화를 위해 참가자 명단·조편성·참가비 기록은 행사 마지막 날로부터 30일이 지나면 자동으로 영구 파기됩니다.
             </p>
           </div>
 
@@ -393,7 +397,7 @@ export default function PlatformHomePage() {
                 </label>
                 <input
                   type="password"
-                  placeholder="비밀번호 입력"
+                  placeholder="비밀번호 입력 (8자 이상)"
                   value={adminPassword}
                   onChange={e => setAdminPassword(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs input-focus-ring font-bold"

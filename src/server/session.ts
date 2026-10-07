@@ -16,6 +16,7 @@ export interface Session {
   districtId?: string;
   churchId?: string;
   districtSlug?: string;
+  sv?: number; // 세션 버전: 비밀번호를 바꾸면 올라가서 예전 로그인(다른 기기 포함)이 모두 끊김
   exp: number; // epoch seconds
 }
 
@@ -65,34 +66,6 @@ export function decodeSession(token: string | undefined | null): Session | null 
   }
 }
 
-/** 범용 서명 토큰 (예: 학부모 사진 보기용 임시 출입증) */
-export function signToken(obj: Record<string, unknown>, ttlSec: number): string {
-  const payload = Buffer.from(JSON.stringify({ ...obj, exp: Math.floor(Date.now() / 1000) + ttlSec }), 'utf8').toString('base64url');
-  return `${payload}.${sign(payload)}`;
-}
-
-export function verifyToken<T = Record<string, unknown>>(token: string | undefined | null): (T & { exp: number }) | null {
-  if (!token) return null;
-  const [payload, sig] = token.split('.');
-  if (!payload || !sig) return null;
-  let expected: string;
-  try {
-    expected = sign(payload);
-  } catch {
-    return null;
-  }
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-  try {
-    const obj = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    if (!obj.exp || obj.exp < Math.floor(Date.now() / 1000)) return null;
-    return obj;
-  } catch {
-    return null;
-  }
-}
-
 export function setSessionCookie(res: NextResponse, s: Omit<Session, 'exp'>) {
   res.cookies.set(SESSION_COOKIE, encodeSession(s), {
     httpOnly: true,
@@ -114,17 +87,33 @@ export function clearSessionCookie(res: NextResponse) {
 export async function getSession(req: NextRequest): Promise<Session | null> {
   const s = decodeSession(req.cookies.get(SESSION_COOKIE)?.value);
   if (!s) return null;
-  if (s.role === 'super') return s;
+  if (s.role === 'super') {
+    // 최고 관리자 비밀번호를 바꾸면 예전 로그인은 모두 무효
+    return Number(s.sv || 0) === (await superSessionVersion()) ? s : null;
+  }
   if (!s.managerId) return null;
   const snap = await adminDb().collection('church_managers').doc(s.managerId).get();
   if (!snap.exists) return null;
   const m = snap.data() as Record<string, unknown>;
   if (m.status !== 'approved' || m.district_id !== s.districtId) return null;
+  if (Number(m.session_version || 0) !== Number(s.sv || 0)) return null; // 비밀번호가 바뀌었음
   const isAdmin = (m.is_admin as boolean | undefined) ?? (m.church_id === '');
   if (s.role === 'admin' && !isAdmin) return null;
   if (s.role === 'manager') {
-    // 담당자의 소속 교회가 바뀌었을 수 있으므로 최신 값 사용
-    return { ...s, churchId: String(m.church_id || '') };
+    // 담당자의 소속 교회가 바뀌었을 수 있으므로 최신 값 사용. 교회 배정 전(신규 교회 요청)이면 어떤 교회 정보도 못 봄
+    const church = String(m.church_id || '');
+    return { ...s, churchId: church === 'temp_new_church' ? '' : church };
   }
   return s;
+}
+
+export async function superSessionVersion(): Promise<number> {
+  const snap = await adminDb().collection('platform_config').doc('config').get();
+  return Number((snap.exists && snap.data()?.super_session_version) || 0);
+}
+
+export async function bumpSuperSessionVersion(): Promise<number> {
+  const v = (await superSessionVersion()) + 1;
+  await adminDb().collection('platform_config').doc('config').set({ super_session_version: v }, { merge: true });
+  return v;
 }

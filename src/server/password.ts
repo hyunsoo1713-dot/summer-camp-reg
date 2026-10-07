@@ -51,3 +51,14 @@ export function verifyPassword(plain: string, stored: unknown, legacy: LegacyKin
   const ok = safeEqual(candidate, stored);
   return { ok, needsRehash: ok };
 }
+
+// 계정이 없을 때도 비밀번호 확인과 같은 시간이 걸리게 해서, 응답 속도로 "이 아이디/이 아이가 있다"는 것을 알아낼 수 없게 함
+let dummyHash: string | null = null;
+export function burnPasswordCheck(plain: string) {
+  if (!dummyHash) dummyHash = hashPassword('dummy-password-for-timing');
+  verifyPassword(plain || 'x', dummyHash, 'plain');
+}
+
+/** 관리자·담당자·최고 관리자 비밀번호 최소 길이 (학부모 수정 비밀번호는 4자 유지) */
+export const STAFF_MIN_PASSWORD = 8;
+export const STAFF_PASSWORD_MESSAGE = `비밀번호는 ${STAFF_MIN_PASSWORD}자 이상이어야 합니다.`;

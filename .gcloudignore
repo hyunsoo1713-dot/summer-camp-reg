@@ -35,8 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# DO NOT ignore .env for Cloud Build (빌드를 위해 .env 파일 업로드를 허용함)
-!.env
+# 비밀값이 들어 있을 수 있는 .env는 올리지 않음 (빌드는 공개용 db_config.env만 사용)
+.env
+.env.*
 !db_config.env
 
 _backup_before_security_fix/

@@ -1,9 +1,8 @@
 // 서버 전용: "문지기" — 누가 어떤 데이터를 보고/쓸 수 있는지 판단하고 실제 DB 작업을 수행합니다.
 import type { DocumentData } from 'firebase-admin/firestore';
 import { adminDb } from './firebaseAdmin';
-import { hashPassword, verifyPassword } from './password';
+import { hashPassword, verifyPassword, STAFF_MIN_PASSWORD, STAFF_PASSWORD_MESSAGE } from './password';
 import type { Session } from './session';
-import { removeParticipantFace } from './photos';
 
 type Doc = Record<string, any>;
 
@@ -47,11 +46,14 @@ export function sanitize(col: string, doc: Doc, opts: { publicView?: boolean } =
   if (col === 'church_managers') delete d.password_hash;
   if (col === 'participants') {
     delete d.edit_password_hash;
-    d.face_enrolled = !!d.face_id; // 얼굴 사진 등록 여부만 알려 줌
-    delete d.face_id;
-    delete d.face_photo_path;
+    for (const k of Object.keys(d)) if (k.startsWith('face_')) delete d[k]; // 예전 사진 기능의 남은 값
   }
-  if (col === 'platform_config') delete d.super_admin_password;
+  if (col === 'events') delete d.photo_match; // 예전 사진 기능의 남은 값
+  if (col === 'platform_config') {
+    delete d.super_admin_password;
+    delete d.super_session_version;
+  }
+  if (col === 'church_managers') delete d.session_version;
   if (col === 'districts' && opts.publicView) {
     delete d.phone;
     delete d.manager_name;
@@ -85,10 +87,17 @@ export async function loadScopedData(session: Session | null): Promise<Record<st
   const approvedIds = new Set(approved.map(d => d.id));
   const inApproved = (d: Doc) => approvedIds.has(d.district_id);
 
+  // 내부 메모·신청자 이름 등은 그 지방회 관리자에게만
+  const ownAdminD = session?.role === 'admin' ? session.districtId : undefined;
+  const hideInternal = (d: Doc): Doc => {
+    if (d.district_id === ownAdminD) return d;
+    const { memo: _memo, ...rest } = d;
+    return rest;
+  };
   out.districts = clean('districts', approved, true);
-  out.events = (await all('events')).filter(inApproved);
-  out.churches = (await all('churches')).filter(inApproved);
-  out.payment_settings = (await all('payment_settings')).filter(inApproved);
+  out.events = clean('events', (await all('events')).filter(inApproved)).map(hideInternal);
+  out.churches = (await all('churches')).filter(inApproved).map(hideInternal);
+  out.payment_settings = (await all('payment_settings')).filter(inApproved).map(hideInternal);
   out.church_fee_overrides = (await all('church_fee_overrides')).filter(inApproved);
   out.platform_config = clean('platform_config', await all('platform_config'));
   out.church_managers = [];
@@ -155,13 +164,13 @@ interface Ctx {
   newLoginIds: Set<string>;
   affectedChurches: Set<string>;
   affectedDistrictsForRecalc: Set<string>;
-  faceRemovals: Record<string, any>[];
+  pending: Map<string, Doc | null>; // 같은 요청 안에서 먼저 만든 문서 (예: 새 행사 + 그 행사의 교회)
 }
 
 const PARTICIPANT_FIELDS = new Set([
   'id', 'district_id', 'event_id', 'church_id', 'participant_type', 'name', 'gender', 'department',
   'birth_year', 'guardian_name', 'guardian_phone', 'personal_phone', 'role', 'shirt_size', 'health_note',
-  'photo_consent', 'custom_consent_agreed', 'attendance_schedule', 'memo', 'assigned_group_id', 'face_consent',
+  'photo_consent', 'custom_consent_agreed', 'attendance_schedule', 'memo', 'assigned_group_id',
   'created_at', 'updated_at',
 ]);
 const PUBLIC_DISTRICT_FIELDS = new Set(['id', 'name', 'slug', 'manager_name', 'phone', 'admin_church_name', 'created_at']);
@@ -237,15 +246,25 @@ async function authorizeAndBuild(op: Exclude<WriteOp, { kind: 'recalc' }>, ctx: 
   delete incoming.edit_password;
   delete incoming.edit_password_hash;
   delete incoming.super_admin_password;
+  delete incoming.session_version;
+  delete incoming.super_session_version;
+  delete incoming.data_purged_at;
 
   let next: Doc | null =
     op.kind === 'delete' ? null : op.kind === 'update' ? { ...(existing || {}), ...incoming } : { ...incoming };
 
   // 보호 필드는 기존 값 유지
   if (next && existing) {
-    if (col === 'church_managers') next.password_hash = existing.password_hash;
+    if (col === 'church_managers') {
+      next.password_hash = existing.password_hash;
+      next.session_version = existing.session_version ?? 0;
+    }
     if (col === 'participants') next.edit_password_hash = existing.edit_password_hash;
-    if (col === 'platform_config') next.super_admin_password = existing.super_admin_password;
+    if (col === 'platform_config') {
+      // 비밀번호·세션 버전은 저장 내용에서 빼고 '덮어쓰지 않는 저장(merge)'으로 처리 → 동시에 바뀐 값이 사라지지 않음
+      delete next.super_admin_password;
+      delete next.super_session_version;
+    }
     if (col === 'church_payment_statuses') next.total_amount = existing.total_amount ?? 0;
     if (existing.created_at && !next.created_at) next.created_at = existing.created_at;
   } else if (next && col === 'church_payment_statuses') {
@@ -322,7 +341,7 @@ async function authorizeAndBuild(op: Exclude<WriteOp, { kind: 'recalc' }>, ctx: 
       }
       requireText(next.name, '이름', 50);
       requireText(next.login_id, '아이디', 50);
-      if (!newManagerPw || newManagerPw.length < 4) throw bad('비밀번호는 4자 이상이어야 합니다.');
+      if (!newManagerPw || newManagerPw.length < STAFF_MIN_PASSWORD) throw bad(STAFF_PASSWORD_MESSAGE);
       checkSize(next, 20000);
     } else if (col === 'participants') {
       if (!existing) {
@@ -368,36 +387,36 @@ async function authorizeAndBuild(op: Exclude<WriteOp, { kind: 'recalc' }>, ctx: 
     }
   }
 
+  // ----- 행사·교회가 같은 지방회 것인지 확인 (다른 지방회 행사로 옮겨 넣기 차단) -----
+  if (next && session && session.role !== 'super') {
+    const D = session.districtId;
+    const lookup = async (c: string, id: string) =>
+      ctx.pending.has(`${c}/${id}`) ? ctx.pending.get(`${c}/${id}`) : await getDoc(c, id);
+    // 사람 정보가 들어 있는 문서만 행사 확인 (교회·참가비 설정 등은 지방회 확인으로 충분)
+    const EVENT_SCOPED = ['participants', 'same_group_requests', 'groups', 'grouping_groups'];
+    if (EVENT_SCOPED.includes(col) && next.event_id !== undefined && next.event_id !== null && next.event_id !== '' && (!existing || existing.event_id !== next.event_id)) {
+      const ev = await lookup('events', String(next.event_id));
+      if (!ev || ev.district_id !== D) throw forbidden();
+    }
+    if (
+      col !== 'churches' &&
+      next.church_id && next.church_id !== 'temp_new_church' &&
+      (!existing || existing.church_id !== next.church_id)
+    ) {
+      const ch = await lookup('churches', String(next.church_id));
+      if (!ch || ch.district_id !== D) throw forbidden();
+    }
+  }
+
   // ----- 공통 후처리 -----
-  // 「참가자 사진 찾기」 관련 값은 전용 API로만 바뀝니다.
   if (next && col === 'events') {
-    if (existing?.photo_match) next.photo_match = existing.photo_match;
-    else delete next.photo_match;
-    // 자동 파기 기록도 서버만 씀
+    delete next.photo_match;
+    // 자동 파기 기록은 서버만 씀
     if (existing?.data_purged_at) next.data_purged_at = existing.data_purged_at;
     else delete next.data_purged_at;
   }
-  if (col === 'participants') {
-    const FACE_FIELDS = ['face_id', 'face_photo_path', 'face_enrolled_at'];
-    if (next) {
-      delete next.face_enrolled;
-      for (const k of FACE_FIELDS) {
-        if (existing && existing[k] !== undefined) next[k] = existing[k];
-        else delete next[k];
-      }
-      // 얼굴 인식 동의는 본인(학부모·참가자)만 바꿀 수 있음
-      if (session) {
-        if (existing && existing.face_consent !== undefined) next.face_consent = existing.face_consent;
-        else delete next.face_consent;
-      } else if (next.face_consent !== undefined) {
-        next.face_consent = next.face_consent === true;
-      }
-    }
-    // 동의 철회 또는 삭제 → 얼굴 정보 삭제
-    if (existing?.face_id && (!next || next.face_consent !== true)) {
-      ctx.faceRemovals.push(existing);
-      if (next) for (const k of FACE_FIELDS) delete next[k];
-    }
+  if (next && col === 'participants') {
+    for (const k of Object.keys(next)) if (k.startsWith('face_')) delete next[k]; // 예전 사진 기능 값은 받지 않음
   }
   if (next && col === 'church_managers') {
     const loginId = String(next.login_id || '').trim();
@@ -409,8 +428,10 @@ async function authorizeAndBuild(op: Exclude<WriteOp, { kind: 'recalc' }>, ctx: 
       ctx.newLoginIds.add(loginId);
     }
     if (newManagerPw) {
-      if (newManagerPw.length < 4) throw bad('비밀번호는 4자 이상이어야 합니다.');
+      if (newManagerPw.length < STAFF_MIN_PASSWORD) throw bad(STAFF_PASSWORD_MESSAGE);
       next.password_hash = hashPassword(newManagerPw);
+      // 관리자가 비밀번호를 새로 정해 주면, 그 계정의 예전 로그인은 모두 끊김
+      if (existing) next.session_version = Number(existing.session_version || 0) + 1;
     }
     if (!next.password_hash) throw bad('비밀번호를 입력해 주세요.');
   }
@@ -448,7 +469,7 @@ export async function applyWrites(session: Session | null, ops: WriteOp[], editA
     newLoginIds: new Set(),
     affectedChurches: new Set(),
     affectedDistrictsForRecalc: new Set(),
-    faceRemovals: [],
+    pending: new Map(),
   };
   const db = adminDb();
   const writes: { col: string; id: string; data: Doc | null }[] = [];
@@ -465,6 +486,7 @@ export async function applyWrites(session: Session | null, ops: WriteOp[], editA
     const next = await authorizeAndBuild(op, ctx);
     if (next === 'skip') continue;
     writes.push({ col: op.col, id: op.id, data: next });
+    ctx.pending.set(`${op.col}/${op.id}`, next);
   }
 
   for (let i = 0; i < writes.length; i += 400) {
@@ -472,13 +494,11 @@ export async function applyWrites(session: Session | null, ops: WriteOp[], editA
     for (const w of writes.slice(i, i + 400)) {
       const ref = db.collection(w.col).doc(w.id);
       if (w.data === null) batch.delete(ref);
+      else if (w.col === 'platform_config') batch.set(ref, w.data, { merge: true });
       else batch.set(ref, w.data);
     }
     await batch.commit();
   }
-
-  // 동의 철회·삭제된 참가자의 얼굴 정보 삭제
-  for (const p of ctx.faceRemovals) await removeParticipantFace(p);
 
   // 행사 참가비 설정이 바뀐 지방회는 모든 교회 재계산
   for (const D of ctx.affectedDistrictsForRecalc) {

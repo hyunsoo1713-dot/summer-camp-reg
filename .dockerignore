@@ -8,3 +8,9 @@ README.md
 npm-debug.log
 
 _backup_before_security_fix
+
+# 비밀값이 들어 있을 수 있는 파일은 이미지에 넣지 않음 (db_config.env는 공개용 설정이라 사용)
+.env
+.env.*
+*.pem
+Claude outputs

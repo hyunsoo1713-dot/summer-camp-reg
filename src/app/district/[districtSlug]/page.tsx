@@ -238,12 +238,6 @@ export default function DistrictHomePage({ params }: PageProps) {
                 내 신청 내역 조회 / 수정
               </Link>
 
-              {event?.photo_match?.status === 'on' && <Link
-                href={`/district/${districtSlug}/photos`}
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-4 px-6 rounded-2xl transition-all-custom text-center"
-              >
-                📷 {'참가자 사진 보기'}
-              </Link>}
             </div>
             </div>
           </div>

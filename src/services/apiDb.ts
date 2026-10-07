@@ -985,13 +985,6 @@ export const apiDb = {
   },
 
   async purgeDistrictData(districtId: string): Promise<void> {
-    // 0. 행사 사진(저장소 파일 포함)도 함께 삭제
-    try {
-      await postJson('/api/photos/purge', { districtId });
-    } catch (err) {
-      console.error('사진 삭제 중 오류:', err);
-    }
-
     // 1. 메모리 DB 즉시 갱신 (반응성 향상)
     const participantsToDelete = memoryDb.participants.filter(p => p.district_id === districtId);
     memoryDb.participants = memoryDb.participants.filter(p => p.district_id !== districtId);
