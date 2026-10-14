@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   title: '모임터 · 교회 연합 행사 등록',
   description: '여름성경학교, 겨울 수련회, 세미나 등 교회 연합 행사의 참가 신청, 참가비 정산, 엑셀 명단, 자동 조편성까지 한 번에 처리하는 플랫폼',
   applicationName: APP_NAME,
-  manifest: '/manifest.json',
+  manifest: '/manifest.json?v=2',
   icons: {
-    icon: [{ url: '/favicon.ico' }, { url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    icon: [{ url: '/favicon.ico' }, { url: '/icon-192-v2.png', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon-v2.png', sizes: '180x180' }],
   },
   appleWebApp: {
     capable: true,

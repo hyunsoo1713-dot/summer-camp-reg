@@ -4,25 +4,25 @@
   "description": "여러 교회가 함께하는 행사의 참가 신청과 관리를 돕는 앱",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192-v2.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512-v2.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-192.png",
+      "src": "/icon-maskable-192-v2.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-maskable-512.png",
+      "src": "/icon-maskable-512-v2.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
